@@ -1,0 +1,433 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Experimental Variant calling &mdash; Medaka 0.8.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Walkthrough" href="walkthrough.html" />
+    <link rel="prev" title="Benchmarks" href="benchmarks.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Medaka
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Experimental Variant calling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#v0-6-x-snp-only-calling">v0.6.x SNP only calling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-7-0-snp-and-indel-calling">v0.7.0 SNP and Indel calling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#performing-variant-calling">Performing Variant Calling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#further-improvements">Further Improvements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough</a></li>
+<li class="toctree-l1"><a class="reference internal" href="draft_origin.html">Origin of the draft sequence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="future.html">History and Future Directions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Medaka</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Experimental Variant calling</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/snp.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="experimental-variant-calling">
+<h1>Experimental Variant calling<a class="headerlink" href="#experimental-variant-calling" title="Permalink to this headline">¶</a></h1>
+<p>Medaka implements an experimental pipeline to call single nucleotide
+polymorphisms (SNPs), insertions, and deletions (Indels) from Nanopore
+basecalls, leveraging medaka’s existing consensus network and phasing
+information from <a class="reference external" href="https://whatshap.readthedocs.io">WhatsHap</a>.</p>
+<p>By way of background, below we discuss the evolution of variant calling
+in medaka from a first SNP-only implementation based simply on the standard
+<code class="docutils literal notranslate"><span class="pre">medaka</span> <span class="pre">consensus</span></code> command, to a second implementation leveraging phasing
+of variants to call haplotype consensuses, arriving at a final draft
+implementation which also calls Indel variants.</p>
+<div class="section" id="v0-6-x-snp-only-calling">
+<h2>v0.6.x SNP only calling<a class="headerlink" href="#v0-6-x-snp-only-calling" title="Permalink to this headline">¶</a></h2>
+<p><em>February 2019</em></p>
+<p>The initial approach was to make a first pass on a pileup of reads to a reference
+sequence using medaka in the usual manner. Ordinarily <code class="docutils literal notranslate"><span class="pre">medaka</span></code> will only call a
+consensus sequence from the outputs of its neural network. However is it
+possible to pull-out secondary calls from its output, i.e. alternative
+alleles. A secondary call occuring with a high probability indicates
+heterozygous locus. Where no secondary call occurs with a high probability the
+locus is determined to be homozygous.
+Applying such a process gives respectable, if not state-of-the-art results for
+a region (<cite>chr21:21300000-22305000</cite>) of the NA12878 human sample.</p>
+<table border="1" class="docutils" id="id2">
+<caption><span class="caption-text">Single nucleotide polymorphism calling at 100-fold coverage using
+simple <cite>medaka consensus</cite> pipeline. Comparison
+is made with the <a class="reference external" href="http://jimb.stanford.edu/giab-resources/">GIAB</a>
+high confidence callset using <a class="reference external" href="https://github.com/RealTimeGenomics/rtg-tools">RTG vcfeval</a>.</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="38%" />
+<col width="23%" />
+<col width="17%" />
+<col width="21%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>&#160;</td>
+<td>Precision</td>
+<td>Recall</td>
+<td>F1 score</td>
+</tr>
+<tr class="row-even"><td>nanopolish</td>
+<td>0.9938</td>
+<td>0.9662</td>
+<td>0.9798</td>
+</tr>
+<tr class="row-odd"><td>clairvoyant</td>
+<td>0.9906</td>
+<td>0.9519</td>
+<td>0.9709</td>
+</tr>
+<tr class="row-even"><td>medaka consensus</td>
+<td>0.9575</td>
+<td>0.9467</td>
+<td>0.9521</td>
+</tr>
+</tbody>
+</table>
+<p>Here both the <a class="reference external" href="https://github.com/jts/nanopolish">nanopolish</a> and
+<a class="reference external" href="https://github.com/aquaskyline/Clairvoyante">clairvoyant</a> calls have been
+post-processed with a custom strand-bias filter to maximise the F1 score.
+Remarkably despite being trained to call a single consensus, medaka can in fact
+recover some heterozygous sites. Indeed one of its failings is to call
+homozygous sites as heterozygous; this is often true of nanopolish also.</p>
+<p>To improve on these results, we can attempt to phase the recovered variants
+using <a class="reference external" href="https://whatshap.readthedocs.io">WhatsHap</a>. This process allows us to
+uncover the haploid genomes and assign a haplotype to all reads. Having
+partitioned reads into their haplotype we can run <cite>medaka consensus</cite> a second
+time to calculate a consensus sequence for each haplotype invididually. This
+second pass is a task in which we know <cite>medaka</cite> excels, see <a class="reference internal" href="benchmarks.html#benchmarks"><span class="std std-ref">Benchmarks</span></a>.
+Having run <cite>medaka</cite> on the partitioned reads it is a simple task to reconstruct
+variant calls, both homo- and heterozygous, and rephase.</p>
+<img alt="_images/phased_snps.png" src="_images/phased_snps.png" />
+<p>In principle one can iterate this process to further refine the partitioning of
+reads into their haplotypes. After two iterations we obtain state-of-the-art
+results for the region under test:</p>
+<table border="1" class="docutils" id="id3">
+<caption><span class="caption-text">Single nucleotide polymorphism calling at 100-fold coverage using
+<cite>medaka variant</cite> pipeline.</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="38%" />
+<col width="23%" />
+<col width="17%" />
+<col width="21%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>&#160;</td>
+<td>Precision</td>
+<td>Recall</td>
+<td>F1 score</td>
+</tr>
+<tr class="row-even"><td>medaka variant</td>
+<td>0.9939</td>
+<td>0.9745</td>
+<td>0.9841</td>
+</tr>
+<tr class="row-odd"><td>nanopolish</td>
+<td>0.9938</td>
+<td>0.9662</td>
+<td>0.9798</td>
+</tr>
+<tr class="row-even"><td>clairvoyant</td>
+<td>0.9906</td>
+<td>0.9519</td>
+<td>0.9709</td>
+</tr>
+<tr class="row-odd"><td>medaka consensus</td>
+<td>0.9575</td>
+<td>0.9467</td>
+<td>0.9521</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="v0-7-0-snp-and-indel-calling">
+<h2>v0.7.0 SNP and Indel calling<a class="headerlink" href="#v0-7-0-snp-and-indel-calling" title="Permalink to this headline">¶</a></h2>
+<p><em>May 2019</em></p>
+<p>Single nucleotide polymorphisms account for 85% of small variants in the human genome,
+leaving a good proportion of insertion and deletion variants. It is therefore
+desirable to detect also these latter classes of variation. <code class="docutils literal notranslate"><span class="pre">medaka</span> <span class="pre">v0.7.0</span></code>
+introduces the ability to call a full set of small variants.</p>
+<p>The procedure is much as for the previous SNP only implementation: a first pass is
+made in which only SNPs are called is used to partition reads by haplotype after which
+indels are called also.</p>
+<p>Benchmarking is performed here on the whole of chromosome 21 of the NA12878 sample, according
+to the <a class="reference external" href="https://www.nature.com/articles/s41587-019-0054-x">GA4GH best practices</a>
+using <a class="reference external" href="https://github.com/Illumina/hap.py">hap.py</a> with the
+<a class="reference external" href="http://jimb.stanford.edu/giab-resources/">GIAB truth set</a> statified to exclude
+repeat regions as defined by the
+<a class="reference external" href="https://github.com/jzook/genome-data-integration/tree/master/NISTv3.3.2/filtbeds/GRCh38">GA4GH process</a>.
+Variants were filtered by their <code class="docutils literal notranslate"><span class="pre">QUAL</span></code> values (separately for SNP and Indel)
+to maximise the F1 score.</p>
+<table border="1" class="docutils" id="id4">
+<caption><span class="caption-text">Small variant calling at 100-fold coverage using <cite>medaka variant</cite> pipeline
+with Indel calling.</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="33%" />
+<col width="13%" />
+<col width="20%" />
+<col width="15%" />
+<col width="19%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>&#160;</td>
+<td>Class</td>
+<td>Precision</td>
+<td>Recall</td>
+<td>F1 score</td>
+</tr>
+<tr class="row-even"><td rowspan="2">medaka variant</td>
+<td>SNP</td>
+<td>0.9870</td>
+<td>0.9812</td>
+<td>0.984</td>
+</tr>
+<tr class="row-odd"><td>Indel</td>
+<td>0.8637</td>
+<td>0.8433</td>
+<td>0.853</td>
+</tr>
+<tr class="row-even"><td rowspan="2">clair</td>
+<td>SNP</td>
+<td>0.9918</td>
+<td>0.9909</td>
+<td>0.991</td>
+</tr>
+<tr class="row-odd"><td>Indel</td>
+<td>0.7210</td>
+<td>0.5906</td>
+<td>0.649</td>
+</tr>
+</tbody>
+</table>
+<p>Shown also are results from <code class="docutils literal notranslate"><span class="pre">clair</span></code> an improved version of <code class="docutils literal notranslate"><span class="pre">clairvoyant</span></code>.
+<code class="docutils literal notranslate"><span class="pre">clair</span></code> is slightly better than <code class="docutils literal notranslate"><span class="pre">medaka</span></code> at calling SNPs but somewhat worse
+at Indel calling.</p>
+</div>
+<div class="section" id="performing-variant-calling">
+<h2>Performing Variant Calling<a class="headerlink" href="#performing-variant-calling" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <code class="docutils literal notranslate"><span class="pre">medaka_variant</span></code> (and <code class="docutils literal notranslate"><span class="pre">medaka_consensus</span></code>) pipeline only operate on
+a <code class="docutils literal notranslate"><span class="pre">.bam</span></code> alignment file containing a single sample (value of the <cite>RG</cite>
+alignment tag). It will refuse to run in the case of two read groups
+being present.</p>
+</div>
+<p>The pipeline described above is implemented in the <code class="docutils literal notranslate"><span class="pre">medaka_variant</span></code> program:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span> <span class="si">${</span><span class="nv">MEDAKA</span><span class="si">}</span>
+medaka_variant -f &lt;REFERENCE.fasta&gt; -b &lt;reads.bam&gt; -m r941_flip213
+</pre></div>
+</div>
+<p>It has been benchmarked on flip-flop basecaller output only. This will run all
+the necessary steps, performing two iterations of the process described above
+finally outputting a final phased <code class="docutils literal notranslate"><span class="pre">.vcf</span></code> variant file.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Variants output by <code class="docutils literal notranslate"><span class="pre">medaka_variant</span></code> are unfiltered, but are provided with
+qualities. It is left to the user to decide how to filter variants for their
+datasets and applications.</p>
+</div>
+</div>
+<div class="section" id="further-improvements">
+<h2>Further Improvements<a class="headerlink" href="#further-improvements" title="Permalink to this headline">¶</a></h2>
+<p>Currently the <code class="docutils literal notranslate"><span class="pre">medaka_variant</span></code> pipeline reuses existing tools and neural neural
+networks trained for the task of deriving a consensus sequence. No
+specialisations have been made for the task at hand. Naturally the existing
+networks do not expect reads indicating a diploid sample and so their ability
+to correctly call heterozygous sites is limited, though useful as demonstrated
+above. It would be preferable to train a neural network with explicit knowledge
+of zygosity — this can be done fairly straight-forwardly with some minor
+modifications to <code class="docutils literal notranslate"><span class="pre">medaka</span></code>’s training code.</p>
+<p>The models currently provided within <code class="docutils literal notranslate"><span class="pre">medaka</span></code> are trained from bacterial
+samples, and further predominantly from PCR products. To improve variant
+calling from basecalls of human, native DNA a next step would be to instead use
+such a sample in training.</p>
+<p>With these changes, and others, it is likely that the results presented above
+can be improved upon.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="walkthrough.html" class="btn btn-neutral float-right" title="Walkthrough" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="benchmarks.html" class="btn btn-neutral float-left" title="Benchmarks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-19, Oxford Nanopore Technologies
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

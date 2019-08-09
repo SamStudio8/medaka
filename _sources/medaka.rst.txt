@@ -1,0 +1,110 @@
+medaka package
+==============
+
+Submodules
+----------
+
+medaka.common module
+--------------------
+
+.. automodule:: medaka.common
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.datastore module
+-----------------------
+
+.. automodule:: medaka.datastore
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.features module
+----------------------
+
+.. automodule:: medaka.features
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.inference module
+-----------------------
+
+.. automodule:: medaka.inference
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.keras\_ext module
+------------------------
+
+.. automodule:: medaka.keras_ext
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.labels module
+--------------------
+
+.. automodule:: medaka.labels
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.medaka module
+--------------------
+
+.. automodule:: medaka.medaka
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.medaka\_counts module
+----------------------------
+
+.. automodule:: medaka.medaka_counts
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.models module
+--------------------
+
+.. automodule:: medaka.models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.stitch module
+--------------------
+
+.. automodule:: medaka.stitch
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.variant module
+---------------------
+
+.. automodule:: medaka.variant
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+medaka.vcf module
+-----------------
+
+.. automodule:: medaka.vcf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: medaka
+    :members:
+    :undoc-members:
+    :show-inheritance:

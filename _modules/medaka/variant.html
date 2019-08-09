@@ -1,0 +1,721 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>medaka.variant &mdash; Medaka 0.8.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Medaka
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../snp.html">Experimental Variant calling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../walkthrough.html">Walkthrough</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../draft_origin.html">Origin of the draft sequence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../future.html">History and Future Directions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Medaka</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../medaka.html">medaka</a> &raquo;</li>
+        
+      <li>medaka.variant</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medaka.variant</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pysam</span>
+
+<span class="kn">import</span> <span class="nn">medaka.common</span>
+<span class="kn">import</span> <span class="nn">medaka.datastore</span>
+<span class="kn">import</span> <span class="nn">medaka.vcf</span>
+
+<span class="n">variant_decoders</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># when calculating qscores, we can get inf, but cannot write that to vcf.</span>
+<span class="n">__max_qscore__</span> <span class="o">=</span> <span class="mi">9999</span>
+
+
+<div class="viewcode-block" id="register_variant_decoder"><a class="viewcode-back" href="../../medaka.html#medaka.variant.register_variant_decoder">[docs]</a><span class="k">def</span> <span class="nf">register_variant_decoder</span><span class="p">(</span><span class="n">clsname</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Register a variant decoder.&quot;&quot;&quot;</span>
+    <span class="n">variant_decoders</span><span class="p">[</span><span class="n">clsname</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span></div>
+
+
+<div class="viewcode-block" id="DecoderRegistrar"><a class="viewcode-back" href="../../medaka.html#medaka.variant.DecoderRegistrar">[docs]</a><span class="k">class</span> <span class="nc">DecoderRegistrar</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;metaclass for registering variant decoders.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">clsname</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="n">newclass</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">DecoderRegistrar</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">clsname</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">attrs</span><span class="p">)</span>
+        <span class="n">register_variant_decoder</span><span class="p">(</span><span class="n">clsname</span><span class="p">,</span> <span class="n">newclass</span><span class="p">)</span>  <span class="c1"># register variant decoders</span>
+        <span class="k">return</span> <span class="n">newclass</span></div>
+
+
+<div class="viewcode-block" id="yield_trimmed_consensus_chunks"><a class="viewcode-back" href="../../medaka.html#medaka.variant.yield_trimmed_consensus_chunks">[docs]</a><span class="k">def</span> <span class="nf">yield_trimmed_consensus_chunks</span><span class="p">(</span><span class="n">sample_gen</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Yield adjacent consensus chunks trimmed to remove overlap.</span>
+
+<span class="sd">    :param sample_gen: `generator of medaka.common.Sample` obj</span>
+
+<span class="sd">    :yields: (`Sample`, bool is_last_in_contig)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s1">&#39;TrimOverlap&#39;</span><span class="p">)</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">sample_gen</span><span class="p">)</span>
+    <span class="n">start_1_ind</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># don&#39;t trim beginning of s1</span>
+    <span class="n">start_2_ind</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># initialise in case we just have 1 sample</span>
+    <span class="k">for</span> <span class="n">s2</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">sample_gen</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)):</span>
+
+        <span class="n">s1_name</span> <span class="o">=</span> <span class="s1">&#39;Unknown&#39;</span> <span class="k">if</span> <span class="n">s1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">s1</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">s2_name</span> <span class="o">=</span> <span class="s1">&#39;Unknown&#39;</span> <span class="k">if</span> <span class="n">s2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">s2</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="n">is_last_in_contig</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">s2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># s1 is last chunk</span>
+            <span class="n">end_1_ind</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># go to the end of s1</span>
+            <span class="n">is_last_in_contig</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rel</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="o">.</span><span class="n">relative_position</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span>
+            <span class="c1"># skip s2 if it is contained within s1 (i.e. s2 is redundant)</span>
+            <span class="k">if</span> <span class="n">rel</span> <span class="ow">is</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="o">.</span><span class="n">Relationship</span><span class="o">.</span><span class="n">s2_within_s1</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> is contained within </span><span class="si">{}</span><span class="s1">, skipping.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">s2_name</span><span class="p">,</span> <span class="n">s1_name</span>
+                <span class="p">))</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">rel</span> <span class="ow">is</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="o">.</span><span class="n">Relationship</span><span class="o">.</span><span class="n">forward_overlap</span><span class="p">:</span>
+                <span class="n">end_1_ind</span><span class="p">,</span> <span class="n">start_2_ind</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="o">.</span><span class="n">overlap_indices</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">rel</span> <span class="ow">is</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="o">.</span><span class="n">Relationship</span><span class="o">.</span><span class="n">forward_gapped</span><span class="p">:</span>
+                <span class="n">is_last_in_contig</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">end_1_ind</span><span class="p">,</span> <span class="n">start_2_ind</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> and </span><span class="si">{}</span><span class="s1"> cannot be concatenated as there is no overlap and they do not abut.&#39;</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s1_name</span><span class="p">,</span> <span class="n">s2_name</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unexpected sample relationship </span><span class="si">{}</span><span class="s1"> between </span><span class="si">{}</span><span class="s1"> and </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">rel</span><span class="p">),</span> <span class="n">s1</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">s2</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="k">yield</span> <span class="n">s1</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">start_1_ind</span><span class="p">,</span> <span class="n">end_1_ind</span><span class="p">)),</span> <span class="n">is_last_in_contig</span>
+
+        <span class="n">s1</span> <span class="o">=</span> <span class="n">s2</span>
+        <span class="n">start_1_ind</span> <span class="o">=</span> <span class="n">start_2_ind</span></div>
+
+
+<div class="viewcode-block" id="join_chunked_variants"><a class="viewcode-back" href="../../medaka.html#medaka.variant.join_chunked_variants">[docs]</a><span class="k">def</span> <span class="nf">join_chunked_variants</span><span class="p">(</span><span class="n">gen</span><span class="p">,</span> <span class="n">ref_seq_encoded</span><span class="p">,</span> <span class="n">gap_encoded</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Process stream of trimmed consensus chunks ensuring a variant is</span>
+<span class="sd">    not split accross multiple chunks.</span>
+
+<span class="sd">    :param gen: stream of (`medaka.common.Sample` obj, bool is_last_in_contig)</span>
+<span class="sd">    :param ref_seq_encoded: `np.ndarray` of the ref sequence (i.e. only major positions) encoded as medaka labels.</span>
+<span class="sd">    :param gap_encoded: int, encoding of gaps.</span>
+
+<span class="sd">    :yields: `medaka.common.Sample`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">queue</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">is_last_in_contig</span> <span class="ow">in</span> <span class="n">gen</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_last_in_contig</span><span class="p">:</span>
+            <span class="c1"># there are no further samples in this contig, so all remaining variants must</span>
+            <span class="c1"># be in this contig or in the queue, so process and empty queue</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="o">.</span><span class="n">from_samples</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span>
+            <span class="n">queue</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># find last non-variant call, i.e. a major position which has no minor</span>
+        <span class="c1"># positions and is the same as the ref</span>
+
+        <span class="n">call</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">label_probs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># get encoded ref seq containing insertions as gaps</span>
+        <span class="n">get_encoded</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">ref_seq_encoded</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">]]</span> <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;minor&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">gap_encoded</span>
+        <span class="n">s_ref_encoded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">((</span><span class="n">get_encoded</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">),</span> <span class="nb">int</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">))</span>
+        <span class="n">is_diff</span> <span class="o">=</span> <span class="n">call</span> <span class="o">!=</span> <span class="n">s_ref_encoded</span>
+        <span class="c1"># don&#39;t count a minor position called as gap as a match</span>
+        <span class="n">both_gap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">call</span> <span class="o">==</span> <span class="n">gap_encoded</span><span class="p">,</span> <span class="n">s_ref_encoded</span> <span class="o">==</span> <span class="n">gap_encoded</span><span class="p">)</span>
+        <span class="n">is_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">is_diff</span><span class="p">,</span> <span class="n">both_gap</span><span class="p">)</span>
+
+        <span class="c1"># if the entire chunk is a variant, queue it up</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">is_var</span><span class="p">):</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">major_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;minor&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">major_pos</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">][</span><span class="n">major_inds</span><span class="p">]</span>
+        <span class="n">major_call</span> <span class="o">=</span> <span class="n">call</span><span class="p">[</span><span class="n">major_inds</span><span class="p">]</span>
+        <span class="n">is_diff</span> <span class="o">=</span> <span class="n">major_call</span> <span class="o">!=</span> <span class="n">ref_seq_encoded</span><span class="p">[(</span><span class="n">major_pos</span><span class="p">,)]</span>
+        <span class="k">for</span> <span class="n">offset</span><span class="p">,</span> <span class="n">is_diff_i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">is_diff</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="c1"># Even if the last position does not look like a variant, we can&#39;t know</span>
+            <span class="c1"># if the first pos in next chunk is not an insertion =&gt; we need</span>
+            <span class="c1"># last non-variant position before last position.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_diff_i</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="n">last_non_var_pos</span> <span class="o">=</span> <span class="n">major_pos</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span> <span class="o">-</span> <span class="n">offset</span><span class="p">]</span>
+        <span class="n">last_non_var_start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">],</span> <span class="n">last_non_var_pos</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span>
+        <span class="n">to_yield</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">last_non_var_start</span><span class="p">))</span>
+        <span class="n">to_queue</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">last_non_var_start</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">yield</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="o">.</span><span class="n">from_samples</span><span class="p">(</span><span class="n">queue</span> <span class="o">+</span> <span class="p">[</span><span class="n">to_yield</span><span class="p">])</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="p">[</span><span class="n">to_queue</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Reached end of generator at </span><span class="si">{}</span><span class="s1"> without is_last_in_contig being True&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SNPDecoder"><a class="viewcode-back" href="../../medaka.html#medaka.variant.SNPDecoder">[docs]</a><span class="k">class</span> <span class="nc">SNPDecoder</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">DecoderRegistrar</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to decode diploid SNPs and deletions using a threshold&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meta</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span> <span class="n">ref_vcf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Class to decode SNPs and deletions from hfds using a threshold</span>
+
+<span class="sd">        :param meta: dict containing &#39;medaka_label_decoding&#39; and &#39;medaka_feature_decoding&#39;i</span>
+<span class="sd">        :param threshold: threshold below which a secondary call (which would make</span>
+<span class="sd">                for a heterozygous call) is deemed insignificant.</span>
+<span class="sd">        :param ref_vcf: input vcf to force evaluation only at these loci, even if we would</span>
+<span class="sd">                not otherwise call a SNP there.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s1">&#39;SNPs&#39;</span><span class="p">)</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;medaka_label_decoding&#39;</span><span class="p">]</span>
+        <span class="c1"># include extra bases so we can encode e.g. N&#39;s in reference</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_encoding</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">ind</span> <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_extra_bases_</span><span class="p">))}</span>
+
+        <span class="c1"># to be able to add feature date to the VCF info fields, we need a label</span>
+        <span class="c1"># for each feature row, which we can get from</span>
+        <span class="c1"># meta[&#39;medaka_feature_decoding&#39;]</span>
+        <span class="c1"># which is a tuple (dtype, is_rev, base, base_len)</span>
+        <span class="c1"># if we have a del, base is None.</span>
+        <span class="n">fmt_feat</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">{}{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;rev&#39;</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;fwd&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;-&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_row_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">fmt_feat</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;medaka_feature_decoding&#39;</span><span class="p">]]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Label decoding is:</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">)</span>
+        <span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref_vcf</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">VCFReader</span><span class="p">(</span><span class="n">ref_vcf</span><span class="p">)</span> <span class="k">if</span> <span class="n">ref_vcf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_vcf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref_loci</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_vcf</span><span class="o">.</span><span class="n">fetch</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ref_loci</span><span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">chrom</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">_get_ref_variant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_name</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if there is a variant at the given ref_name and pos in the input reference vcf.</span>
+
+<span class="sd">        :param ref_name: str, genomic contig.</span>
+<span class="sd">        :param pos: int, genomic position.</span>
+
+<span class="sd">        :returns: dict containing &#39;ref_alt&#39; and &#39;ref_gt&#39; fields which are both &#39;na&#39; if there is no variant at that loci.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ref_variants</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_vcf</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">ref_name</span><span class="o">=</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="n">pos</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">pos</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_variants</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_variants</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ref_info</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ref_alt&#39;</span><span class="p">:</span> <span class="s1">&#39;na&#39;</span><span class="p">,</span> <span class="s1">&#39;ref_gt&#39;</span><span class="p">:</span> <span class="s1">&#39;na&#39;</span><span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ref_info</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ref_alt&#39;</span><span class="p">:</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ref_variants</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">alt</span><span class="p">),</span>
+                        <span class="s1">&#39;ref_gt&#39;</span><span class="p">:</span> <span class="n">ref_variants</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sample_dict</span><span class="p">[</span><span class="s1">&#39;GT&#39;</span><span class="p">]}</span>
+        <span class="k">return</span> <span class="n">ref_info</span>
+
+
+<div class="viewcode-block" id="SNPDecoder.decode_variants"><a class="viewcode-back" href="../../medaka.html#medaka.variant.SNPDecoder.decode_variants">[docs]</a>    <span class="k">def</span> <span class="nf">decode_variants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">ref_seq</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.04</span><span class="p">,</span> <span class="n">multi_label</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decode SNPs using a threshold.</span>
+
+<span class="sd">        :param samples: stream of `medaka.common.Sample` objects for a given contig.</span>
+<span class="sd">        :param ref_seq: reference sequence.</span>
+<span class="sd">        :param threshold: threshold below which a secondary call (which would make</span>
+<span class="sd">                for a heterozygous call) is deemed insignificant.</span>
+<span class="sd">        :param multi_label: Use this option if the model was trained with the multi_label option</span>
+<span class="sd">                meaning that label probabilities are independent and do not sum up to 1.</span>
+
+<span class="sd">        :returns: sorted list of `medaka.vcf.Variant` objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># For SNPS, we assume we just want the label probabilities at major positions</span>
+        <span class="c1"># We need to handle boundary effects simply to make sure we take the best</span>
+        <span class="c1"># probability (which is furthest from the boundary).</span>
+        <span class="n">called_loci</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">ref_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">yield_trimmed_consensus_chunks</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+            <span class="n">ref_name</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">ref_name</span> <span class="k">if</span> <span class="n">ref_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ref_name</span>
+            <span class="k">assert</span> <span class="n">ref_name</span> <span class="o">==</span> <span class="n">s</span><span class="o">.</span><span class="n">ref_name</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">positions</span>
+            <span class="n">probs</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">label_probs</span>
+            <span class="c1"># discard minor positions (insertions)</span>
+            <span class="n">major_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="s1">&#39;minor&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">major_pos</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">major_inds</span><span class="p">][</span><span class="s1">&#39;major&#39;</span><span class="p">]</span>
+            <span class="n">major_probs</span> <span class="o">=</span> <span class="n">probs</span><span class="p">[</span><span class="n">major_inds</span><span class="p">]</span>
+            <span class="n">major_feat</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="n">major_inds</span><span class="p">]</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+            <span class="c1"># for homozygous SNP max_prob_label not in {ref, del} and</span>
+            <span class="c1"># (2nd_max_prob &lt; threshold or 2nd_max_prob_label is del)</span>
+            <span class="c1"># for heterozygous SNP 2nd_max_prob &gt; threshold and del not in {max_prob_label, 2nd_prob_label}</span>
+            <span class="c1"># this catches both SNPs where the genotype contains the</span>
+            <span class="c1"># reference, and where both copies are mutated.</span>
+
+            <span class="n">ref_seq_encoded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">label_encoding</span><span class="p">[</span><span class="n">ref_seq</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">major_pos</span><span class="p">),</span> <span class="nb">int</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">major_pos</span><span class="p">))</span>
+            <span class="n">sorted_prob_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">major_probs</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">sorted_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">take_along_axis</span><span class="p">(</span><span class="n">major_probs</span><span class="p">,</span> <span class="n">sorted_prob_inds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">primary_labels</span> <span class="o">=</span> <span class="n">sorted_prob_inds</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">secondary_labels</span> <span class="o">=</span> <span class="n">sorted_prob_inds</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">primary_probs</span> <span class="o">=</span> <span class="n">sorted_probs</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">secondary_probs</span> <span class="o">=</span> <span class="n">sorted_probs</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+            <span class="c1"># skip positions where ref is not a label (ATGC)</span>
+            <span class="n">is_ref_valid_label</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">ref_seq_encoded</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">)))</span>
+
+            <span class="c1"># homozygous SNPs</span>
+            <span class="n">is_primary_diff_to_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">not_equal</span><span class="p">(</span><span class="n">primary_labels</span><span class="p">,</span> <span class="n">ref_seq_encoded</span><span class="p">)</span>
+            <span class="n">is_primary_not_del</span> <span class="o">=</span> <span class="n">primary_labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_encoding</span><span class="p">[</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">]</span>
+            <span class="n">is_secondary_del</span> <span class="o">=</span> <span class="n">secondary_labels</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_encoding</span><span class="p">[</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">]</span>
+            <span class="n">is_secondary_prob_lt_thresh</span> <span class="o">=</span> <span class="n">secondary_probs</span> <span class="o">&lt;</span> <span class="n">threshold</span>
+            <span class="n">is_not_secondary_call</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">is_secondary_del</span><span class="p">,</span> <span class="n">is_secondary_prob_lt_thresh</span><span class="p">)</span>
+
+            <span class="n">is_homozygous_snp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">is_primary_diff_to_ref</span><span class="p">,</span> <span class="n">is_primary_not_del</span><span class="p">,</span> <span class="n">is_not_secondary_call</span><span class="p">,</span> <span class="n">is_ref_valid_label</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">homozygous_snp_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_homozygous_snp</span><span class="p">)</span>
+
+            <span class="c1"># heterozygous SNPs</span>
+            <span class="n">is_secondary_prob_ge_thresh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">is_secondary_prob_lt_thresh</span><span class="p">)</span>
+            <span class="n">is_secondary_not_del</span> <span class="o">=</span> <span class="n">secondary_labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_encoding</span><span class="p">[</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">]</span>
+
+            <span class="n">is_heterozygous_snp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">is_secondary_prob_ge_thresh</span><span class="p">,</span> <span class="n">is_secondary_not_del</span><span class="p">,</span> <span class="n">is_primary_not_del</span><span class="p">,</span> <span class="n">is_ref_valid_label</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">heterozygous_snp_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_heterozygous_snp</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">homozygous_snp_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">ref_base_encoded</span> <span class="o">=</span> <span class="n">ref_seq_encoded</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ref_prob&#39;</span><span class="p">:</span> <span class="n">major_probs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">ref_base_encoded</span><span class="p">],</span>
+                        <span class="s1">&#39;primary_prob&#39;</span><span class="p">:</span> <span class="n">primary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="s1">&#39;primary_label&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">primary_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span>
+                        <span class="s1">&#39;secondary_prob&#39;</span><span class="p">:</span> <span class="n">secondary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="s1">&#39;secondary_label&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">secondary_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span>
+                        <span class="p">}</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_vcf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">ref_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ref_variant</span><span class="p">(</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">major_pos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">info</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ref_info</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">major_feat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">info</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_row_names</span><span class="p">,</span> <span class="n">major_feat</span><span class="p">[</span><span class="n">i</span><span class="p">])))</span>
+
+                <span class="n">qual</span> <span class="o">=</span> <span class="o">-</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">primary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">sample</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;GT&#39;</span><span class="p">:</span> <span class="s1">&#39;1/1&#39;</span><span class="p">,</span> <span class="s1">&#39;GQ&#39;</span><span class="p">:</span> <span class="n">qual</span><span class="p">,}</span>
+                <span class="n">called_loci</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">major_pos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">yield</span> <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">Variant</span><span class="p">(</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">major_pos</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">ref_base_encoded</span><span class="p">],</span>
+                                         <span class="n">alt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">primary_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span>
+                                         <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;PASS&#39;</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span> <span class="n">qual</span><span class="o">=</span><span class="n">qual</span><span class="p">,</span>
+                                         <span class="n">sample_dict</span><span class="o">=</span><span class="n">sample</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">heterozygous_snp_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">ref_base_encoded</span> <span class="o">=</span> <span class="n">ref_seq_encoded</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ref_prob&#39;</span><span class="p">:</span> <span class="n">major_probs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">ref_base_encoded</span><span class="p">],</span>
+                        <span class="s1">&#39;primary_prob&#39;</span><span class="p">:</span> <span class="n">primary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="s1">&#39;primary_label&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">primary_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span>
+                        <span class="s1">&#39;secondary_prob&#39;</span><span class="p">:</span> <span class="n">secondary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                        <span class="s1">&#39;secondary_label&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">secondary_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                        <span class="p">}</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_vcf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">ref_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ref_variant</span><span class="p">(</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">major_pos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">info</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ref_info</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">major_feat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">info</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_row_names</span><span class="p">,</span> <span class="n">major_feat</span><span class="p">[</span><span class="n">i</span><span class="p">])))</span>
+
+                <span class="k">if</span> <span class="n">multi_label</span><span class="p">:</span>
+                    <span class="c1"># label probabilities are independent and not normalised</span>
+                    <span class="c1"># so calculate error for each haplotype as 1-p(call)</span>
+                    <span class="c1"># average the error so that a similar threshold can be used</span>
+                    <span class="c1"># for homozygous and heterozygous SNPs (were one to sum, if</span>
+                    <span class="c1"># one assumes that the network can be equally confident at</span>
+                    <span class="c1"># calling homozygous and heterozygous loci, the heterozygous</span>
+                    <span class="c1"># quals would always have double the uncertainty.</span>
+                    <span class="n">err</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">primary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">secondary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># ideally one will have almost 0.5 probability in each</span>
+                    <span class="c1"># label, with any residual error in the other labels</span>
+                    <span class="c1"># (as compared to homozygous loci where one would have</span>
+                    <span class="c1"># almost unit probability in a single label</span>
+                    <span class="n">err</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">primary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">secondary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+                <span class="n">qual</span> <span class="o">=</span> <span class="o">-</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">err</span><span class="p">)</span>
+                <span class="n">alt</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="p">(</span><span class="n">primary_labels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">secondary_labels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">if</span> <span class="n">l</span> <span class="o">!=</span> <span class="n">ref_base_encoded</span><span class="p">]</span>
+                <span class="n">gt</span> <span class="o">=</span> <span class="s1">&#39;0/1&#39;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">alt</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s1">&#39;1/2&#39;</span>  <span class="c1"># / =&gt; unphased</span>
+                <span class="n">sample</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;GT&#39;</span><span class="p">:</span> <span class="n">gt</span><span class="p">,</span> <span class="s1">&#39;GQ&#39;</span><span class="p">:</span> <span class="n">qual</span><span class="p">,}</span>
+                <span class="n">called_loci</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">major_pos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">yield</span> <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">Variant</span><span class="p">(</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">major_pos</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">ref_base_encoded</span><span class="p">],</span>
+                                         <span class="n">alt</span><span class="o">=</span><span class="n">alt</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;PASS&#39;</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span>
+                                         <span class="n">qual</span><span class="o">=</span><span class="n">qual</span><span class="p">,</span> <span class="n">sample_dict</span><span class="o">=</span><span class="n">sample</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_vcf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># if we provided a vcf, check which positions are missing</span>
+                <span class="n">missing_loci</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_loci</span><span class="p">[</span><span class="n">ref_name</span><span class="p">]</span> <span class="o">-</span> <span class="n">called_loci</span>
+                <span class="n">missing_loci_in_chunk</span> <span class="o">=</span> <span class="n">missing_loci</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">major_pos</span><span class="p">)</span>
+                <span class="n">missing_loci_in_chunk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span><span class="n">missing_loci_in_chunk</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span>
+                                                    <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">missing_loci_in_chunk</span><span class="p">))</span>
+                <span class="n">is_missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">major_pos</span><span class="p">,</span> <span class="n">missing_loci_in_chunk</span><span class="p">)</span>
+                <span class="n">missing_snp_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_missing</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">missing_snp_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">ref_base_encoded</span> <span class="o">=</span> <span class="n">ref_seq_encoded</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ref_prob&#39;</span><span class="p">:</span> <span class="n">major_probs</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">ref_base_encoded</span><span class="p">],</span>
+                            <span class="s1">&#39;primary_prob&#39;</span><span class="p">:</span> <span class="n">primary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                            <span class="s1">&#39;primary_label&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">primary_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span>
+                            <span class="s1">&#39;secondary_prob&#39;</span><span class="p">:</span> <span class="n">secondary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                            <span class="s1">&#39;secondary_label&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">secondary_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span>
+                            <span class="p">}</span>
+                    <span class="n">ref_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ref_variant</span><span class="p">(</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">major_pos</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">info</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ref_info</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">major_feat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">info</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_row_names</span><span class="p">,</span> <span class="n">major_feat</span><span class="p">[</span><span class="n">i</span><span class="p">])))</span>
+                    <span class="n">qual</span> <span class="o">=</span> <span class="o">-</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">primary_probs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">sample</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;GT&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;GQ&#39;</span><span class="p">:</span> <span class="n">qual</span><span class="p">,}</span>
+                    <span class="k">yield</span> <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">Variant</span><span class="p">(</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">major_pos</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">ref_base_encoded</span><span class="p">],</span>
+                                             <span class="n">alt</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;PASS&#39;</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span>
+                                             <span class="n">qual</span><span class="o">=</span><span class="n">qual</span><span class="p">,</span> <span class="n">sample_dict</span><span class="o">=</span><span class="n">sample</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;ref_prob&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Float&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka label probability for the reference allele&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;primary_prob&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;String&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka label probability of primary call&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;primary_label&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;String&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka label of primary call&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;secondary_prob&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Float&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka label probability of secondary call&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;secondary_label&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;String&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka label of secondary call&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;FORMAT&#39;</span><span class="p">,</span> <span class="s1">&#39;GT&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;String&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka genotype&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;FORMAT&#39;</span><span class="p">,</span> <span class="s1">&#39;GQ&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Float&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka genotype quality score&#39;</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">m</span></div>
+
+
+<div class="viewcode-block" id="parse_regions"><a class="viewcode-back" href="../../medaka.html#medaka.variant.parse_regions">[docs]</a><span class="k">def</span> <span class="nf">parse_regions</span><span class="p">(</span><span class="n">regions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse region strings, returning a list of ref_names.</span>
+
+<span class="sd">    :param regions: iterable of region strings.</span>
+
+<span class="sd">    :returns: tuple of str of ref_names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#TODO: respect entire region specification</span>
+    <span class="n">ref_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Region</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">regions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">region</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">region</span><span class="o">.</span><span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ignoring start:end for &#39;</span><span class="si">{}</span><span class="s2">&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">region</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">region</span><span class="o">.</span><span class="n">ref_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ref_names</span><span class="p">:</span>
+            <span class="n">ref_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">ref_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ref_names</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HaploidVariantDecoder"><a class="viewcode-back" href="../../medaka.html#medaka.variant.HaploidVariantDecoder">[docs]</a><span class="k">class</span> <span class="nc">HaploidVariantDecoder</span><span class="p">(</span><span class="n">SNPDecoder</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">DecoderRegistrar</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to decode haploid variants (snps and indels).&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="HaploidVariantDecoder.decode_variants"><a class="viewcode-back" href="../../medaka.html#medaka.variant.HaploidVariantDecoder.decode_variants">[docs]</a>    <span class="k">def</span> <span class="nf">decode_variants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">ref_seq</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decode haploid variants.</span>
+
+<span class="sd">        Multi-base or otherwise complex variants will be decoded in their entirety.</span>
+
+<span class="sd">        :param samples: stream of `medaka.common.Sample` objects for a given contig.</span>
+<span class="sd">        :param ref_seq: reference sequence.</span>
+
+<span class="sd">        :returns: sorted list of `medaka.vcf.Variant` objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ref_seq_encoded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">label_encoding</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">ref_seq</span><span class="p">),</span> <span class="nb">int</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_seq</span><span class="p">))</span>
+
+        <span class="n">gap_encoded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_encoding</span><span class="p">[</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">join_chunked_variants</span><span class="p">(</span><span class="n">yield_trimmed_consensus_chunks</span><span class="p">(</span><span class="n">samples</span><span class="p">),</span> <span class="n">ref_seq_encoded</span><span class="p">,</span> <span class="n">gap_encoded</span><span class="p">):</span>
+
+            <span class="c1">#TODO parallelize? one could dispatch each sample s to a different process..</span>
+
+            <span class="k">assert</span> <span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;minor&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="n">pred_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">label_probs</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># get encoded ref seq containing insertions as gaps</span>
+            <span class="n">get_label</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">ref_seq_encoded</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">]]</span> <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;minor&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">gap_encoded</span>
+            <span class="n">ref_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">((</span><span class="n">get_label</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">),</span> <span class="nb">int</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">))</span>
+
+            <span class="c1"># find variants by looking for runs of labels which differ. If both</span>
+            <span class="c1"># labels are gap, we don&#39;t want to consider this a match so as to</span>
+            <span class="c1"># avoid splitting up long insertions if there happens to be a gap</span>
+            <span class="c1"># label in ref and pred.</span>
+            <span class="n">is_diff</span> <span class="o">=</span> <span class="n">pred_labels</span> <span class="o">!=</span> <span class="n">ref_labels</span>
+            <span class="n">both_gap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">pred_labels</span> <span class="o">==</span> <span class="n">gap_encoded</span><span class="p">,</span> <span class="n">ref_labels</span> <span class="o">==</span> <span class="n">gap_encoded</span><span class="p">)</span>
+            <span class="n">is_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">is_diff</span><span class="p">,</span> <span class="n">both_gap</span><span class="p">)</span>
+            <span class="n">runs</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">rle</span><span class="p">(</span><span class="n">is_var</span><span class="p">)</span>
+            <span class="n">var_runs</span> <span class="o">=</span> <span class="n">runs</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">runs</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])]</span>
+            <span class="c1"># TODO: optionally load in var_runs from an input vcf -</span>
+            <span class="c1"># we can then decode quals for what medaka had, the ref and input alt</span>
+
+            <span class="k">for</span> <span class="n">var_run</span> <span class="ow">in</span> <span class="n">var_runs</span><span class="p">:</span>
+                <span class="n">start_i</span> <span class="o">=</span> <span class="n">var_run</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span>
+                <span class="n">stop_i</span> <span class="o">=</span> <span class="n">start_i</span> <span class="o">+</span> <span class="n">var_run</span><span class="p">[</span><span class="s1">&#39;length&#39;</span><span class="p">]</span>
+                <span class="c1"># if call or ref starts with gap, pad left (or right if we are</span>
+                <span class="c1"># at start of genome).</span>
+                <span class="n">pad_right</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">while</span> <span class="p">((</span><span class="ow">not</span> <span class="n">pad_right</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ref_labels</span><span class="p">[</span><span class="n">start_i</span><span class="p">]</span> <span class="o">==</span> <span class="n">gap_encoded</span> <span class="ow">or</span> <span class="n">pred_labels</span><span class="p">[</span><span class="n">start_i</span><span class="p">]</span> <span class="o">==</span> <span class="n">gap_encoded</span><span class="p">))</span>
+                        <span class="ow">or</span>
+                       <span class="p">(</span><span class="n">pad_right</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ref_labels</span><span class="p">[</span><span class="n">stop_i</span><span class="p">]</span> <span class="o">==</span> <span class="n">gap_encoded</span> <span class="ow">or</span> <span class="n">pred_labels</span><span class="p">[</span><span class="n">stop_i</span><span class="p">]</span> <span class="o">==</span> <span class="n">gap_encoded</span><span class="p">))</span>
+                      <span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">start_i</span><span class="p">])</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pad_right</span><span class="p">:</span>
+                        <span class="n">stop_i</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="c1"># avoid getting stuck in loop if there is a run of dels at start of ref</span>
+                        <span class="n">pad_right</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">assert</span> <span class="n">start_i</span> <span class="o">!=</span> <span class="mi">0</span>
+                        <span class="n">start_i</span> <span class="o">-=</span> <span class="mi">1</span>
+
+                <span class="n">var_ref_labels</span> <span class="o">=</span> <span class="n">ref_labels</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">stop_i</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">var_ref_labels</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">):</span>
+                    <span class="c1"># Ref seq contains non-label bases (e.g. N&#39;s)</span>
+                    <span class="k">continue</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Ref seq contains non-label bases, skipping </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">())</span>
+
+                <span class="n">var_ref_decoded</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">var_ref_labels</span><span class="p">])</span>
+                <span class="n">var_ref_seq</span> <span class="o">=</span> <span class="n">var_ref_decoded</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">var_pred_labels</span> <span class="o">=</span> <span class="n">pred_labels</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">stop_i</span><span class="p">]</span>
+                <span class="n">var_pred_decoded</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">label_decoding</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">var_pred_labels</span><span class="p">])</span>
+                <span class="n">var_pred_seq</span> <span class="o">=</span> <span class="n">var_pred_decoded</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">var_ref_seq</span> <span class="o">==</span> <span class="n">var_pred_seq</span><span class="p">:</span>
+                    <span class="c1"># this is not a variant</span>
+                    <span class="k">continue</span>
+                <span class="n">probs</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">label_probs</span><span class="p">[</span><span class="n">start_i</span><span class="p">:</span><span class="n">stop_i</span><span class="p">]</span>
+                <span class="n">var_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">((</span><span class="n">probs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">var_pred_labels</span><span class="p">)),</span>
+                                        <span class="n">dtype</span><span class="o">=</span><span class="n">probs</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">var_pred_labels</span><span class="p">))</span>
+                <span class="n">ref_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">((</span><span class="n">probs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">var_ref_labels</span><span class="p">)),</span>
+                                        <span class="n">dtype</span><span class="o">=</span><span class="n">probs</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">var_ref_labels</span><span class="p">))</span>
+                <span class="n">var_quals</span> <span class="o">=</span> <span class="o">-</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">var_probs</span><span class="p">)</span>
+                <span class="n">ref_quals</span> <span class="o">=</span> <span class="o">-</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ref_probs</span><span class="p">)</span>
+                <span class="n">qfmt</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">q</span> <span class="p">:</span> <span class="s1">&#39;</span><span class="si">{:.3f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">q</span> <span class="k">if</span> <span class="n">q</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">else</span> <span class="n">__max_qscore__</span><span class="p">)</span>
+                <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ref_seq&#39;</span><span class="p">:</span> <span class="n">var_ref_decoded</span><span class="p">,</span>
+                        <span class="s1">&#39;pred_seq&#39;</span><span class="p">:</span> <span class="n">var_pred_decoded</span><span class="p">,</span>
+                        <span class="s1">&#39;pred_qs&#39;</span><span class="p">:</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">qfmt</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">var_quals</span><span class="p">)),</span>
+                        <span class="s1">&#39;ref_qs&#39;</span><span class="p">:</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">qfmt</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">ref_quals</span><span class="p">)),</span>
+                        <span class="s1">&#39;pred_q&#39;</span><span class="p">:</span> <span class="n">qfmt</span><span class="p">(</span><span class="n">var_quals</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
+                        <span class="s1">&#39;ref_q&#39;</span><span class="p">:</span> <span class="n">qfmt</span><span class="p">(</span><span class="n">ref_quals</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
+                        <span class="s1">&#39;n_cols&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">var_quals</span><span class="p">),</span>
+                        <span class="p">}</span>
+
+                <span class="n">qual</span> <span class="o">=</span> <span class="n">qfmt</span><span class="p">(</span><span class="n">var_quals</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="n">ref_quals</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>  <span class="c1"># log likelihood ratio</span>
+                <span class="c1"># TODO: test if normalising by n_cols_diff makes it easier to</span>
+                <span class="c1"># pick a single threshold that will work equally well for short</span>
+                <span class="c1"># and long variants (at the moment, longer variants have a</span>
+                <span class="c1"># higher qual)</span>
+                <span class="c1"># n_cols_diff = sum(p != r for p, r in zip(info[&#39;pred_seq&#39;], info[&#39;ref_seq&#39;]))</span>
+                <span class="c1"># qual /= n_cols_diff</span>
+                <span class="n">sample</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;GT&#39;</span><span class="p">:</span> <span class="s1">&#39;1/1&#39;</span><span class="p">,</span> <span class="s1">&#39;GQ&#39;</span><span class="p">:</span> <span class="n">qual</span><span class="p">,}</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Yielding variant </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">start_i</span><span class="p">]))</span>
+                <span class="k">yield</span> <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">Variant</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">][</span><span class="n">start_i</span><span class="p">],</span>
+                                         <span class="n">var_ref_seq</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="n">var_pred_seq</span><span class="p">,</span>
+                                         <span class="nb">filter</span><span class="o">=</span><span class="s1">&#39;PASS&#39;</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="n">info</span><span class="p">,</span> <span class="n">qual</span><span class="o">=</span><span class="n">qual</span><span class="p">,</span>
+                                         <span class="n">sample_dict</span><span class="o">=</span><span class="n">sample</span><span class="p">)</span><span class="o">.</span><span class="n">trim</span><span class="p">()</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;ref_seq&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;String&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka reference label for each pileup column&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;pred_seq&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;String&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka predicted-label for each pileup column&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;pred_qs&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;Float&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka predicted-label quality score for each pileup column&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;ref_qs&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;Float&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka reference-label quality score for each pileup column&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;pred_q&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Float&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka total predicted-label quality score&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;ref_q&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Float&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka total reference-label quality score&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">,</span> <span class="s1">&#39;n_cols&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Integer&#39;</span><span class="p">,</span> <span class="s1">&#39;Number of Medaka pileup columns in the variant call&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;FORMAT&#39;</span><span class="p">,</span> <span class="s1">&#39;GT&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;String&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka genotype.&#39;</span><span class="p">),</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">MetaInfo</span><span class="p">(</span><span class="s1">&#39;FORMAT&#39;</span><span class="p">,</span> <span class="s1">&#39;GQ&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Float&#39;</span><span class="p">,</span> <span class="s1">&#39;Medaka genotype quality score&#39;</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">m</span></div>
+
+
+<div class="viewcode-block" id="variants_from_hdf"><a class="viewcode-back" href="../../medaka.html#medaka.variant.variants_from_hdf">[docs]</a><span class="k">def</span> <span class="nf">variants_from_hdf</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Entry point for variant calling from hdf consensus probability files.&quot;&quot;&quot;</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">datastore</span><span class="o">.</span><span class="n">DataIndex</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">regions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ref_names</span> <span class="o">=</span> <span class="n">parse_regions</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">regions</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ref_names</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">loose_version_sort</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="n">decoder_cls</span> <span class="o">=</span> <span class="n">variant_decoders</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">decoder</span><span class="p">]</span>
+    <span class="n">decoder</span> <span class="o">=</span> <span class="n">decoder_cls</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">meta</span><span class="p">,</span> <span class="n">ref_vcf</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">ref_vcf</span><span class="p">)</span>
+
+    <span class="n">opts</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">decoder</span><span class="o">.</span><span class="n">decode_variants</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">opts</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="nb">getattr</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">opts</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span>  <span class="p">{</span><span class="s1">&#39;self&#39;</span><span class="p">,</span> <span class="s1">&#39;samples&#39;</span><span class="p">,</span> <span class="s1">&#39;ref_seq&#39;</span><span class="p">}}</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s1">&#39;Variants&#39;</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">medaka</span><span class="o">.</span><span class="n">vcf</span><span class="o">.</span><span class="n">VCFWriter</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s1">&#39;4.1&#39;</span><span class="p">,</span> <span class="n">contigs</span><span class="o">=</span><span class="n">ref_names</span><span class="p">,</span>
+                              <span class="n">meta_info</span><span class="o">=</span><span class="n">decoder</span><span class="o">.</span><span class="n">meta_info</span><span class="p">)</span> <span class="k">as</span> <span class="n">vcf_writer</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">ref_name</span> <span class="ow">in</span> <span class="n">ref_names</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ref_name</span><span class="p">))</span>
+            <span class="n">ref_seq</span> <span class="o">=</span> <span class="n">pysam</span><span class="o">.</span><span class="n">FastaFile</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">ref_fasta</span><span class="p">)</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">reference</span><span class="o">=</span><span class="n">ref_name</span><span class="p">)</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">yield_from_feature_files</span><span class="p">([</span><span class="n">ref_name</span><span class="p">])</span>
+            <span class="n">variants</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">decode_variants</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">ref_seq</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+            <span class="n">vcf_writer</span><span class="o">.</span><span class="n">write_variants</span><span class="p">(</span><span class="n">variants</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-19, Oxford Nanopore Technologies
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

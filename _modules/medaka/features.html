@@ -1,0 +1,1053 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>medaka.features &mdash; Medaka 0.8.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Medaka
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../snp.html">Experimental Variant calling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../walkthrough.html">Walkthrough</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../draft_origin.html">Origin of the draft sequence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../future.html">History and Future Directions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Medaka</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../medaka.html">medaka</a> &raquo;</li>
+        
+      <li>medaka.features</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medaka.features</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">concurrent.futures</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Pool</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">timeit</span> <span class="k">import</span> <span class="n">default_timer</span> <span class="k">as</span> <span class="n">now</span>
+
+<span class="kn">from</span> <span class="nn">Bio</span> <span class="k">import</span> <span class="n">SeqIO</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pysam</span>
+
+<span class="kn">import</span> <span class="nn">medaka.common</span>
+<span class="kn">import</span> <span class="nn">medaka.datastore</span>
+<span class="kn">import</span> <span class="nn">medaka.labels</span>
+<span class="kn">import</span> <span class="nn">libmedaka</span>
+
+
+<div class="viewcode-block" id="pileup_counts"><a class="viewcode-back" href="../../medaka.html#medaka.features.pileup_counts">[docs]</a><span class="k">def</span> <span class="nf">pileup_counts</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">bam</span><span class="p">,</span> <span class="n">dtype_prefixes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">region_split</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tag_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create pileup counts feature array for region.</span>
+
+<span class="sd">    :param region: `medaka.common.Region` object</span>
+<span class="sd">    :param bam: .bam file with alignments.</span>
+<span class="sd">    :param dtype_prefixes: prefixes for query names which to separate counts.</span>
+<span class="sd">        If `None` (or of length 1), counts are not split.</span>
+<span class="sd">    :param tag_name: two letter tag name by which to filter reads.</span>
+<span class="sd">    :param tag_value: integer value of tag for reads to keep.</span>
+<span class="sd">    :param keep_missing: whether to keep reads when tag is missing.</span>
+
+<span class="sd">    :returns: pileup counts array, reference positions, insertion postions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ffi</span><span class="p">,</span> <span class="n">lib</span> <span class="o">=</span> <span class="n">libmedaka</span><span class="o">.</span><span class="n">ffi</span><span class="p">,</span> <span class="n">libmedaka</span><span class="o">.</span><span class="n">lib</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s1">&#39;PileUp&#39;</span><span class="p">)</span>
+
+    <span class="n">num_dtypes</span><span class="p">,</span> <span class="n">dtypes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ffi</span><span class="o">.</span><span class="n">NULL</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype_prefixes</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">dtype_prefixes</span> <span class="o">=</span> <span class="p">[</span><span class="n">dtype_prefixes</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">dtype_prefixes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">dtype_prefixes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">num_dtypes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dtype_prefixes</span><span class="p">)</span>
+        <span class="n">_dtypes</span> <span class="o">=</span> <span class="p">[</span><span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;char[]&quot;</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dtype_prefixes</span><span class="p">]</span>
+        <span class="n">dtypes</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;char *[]&quot;</span><span class="p">,</span> <span class="n">_dtypes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tag_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tag_name</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;char[2]&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+        <span class="n">tag_value</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">keep_missing</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tag_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;tag_value&#39; must be a length-2 string.&quot;</span><span class="p">)</span>
+        <span class="n">tag_name</span> <span class="o">=</span> <span class="n">ffi</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s2">&quot;char[2]&quot;</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+
+    <span class="n">featlen</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">featlen</span>
+
+    <span class="k">def</span> <span class="nf">_process_region</span><span class="p">(</span><span class="n">reg</span><span class="p">):</span>
+        <span class="c1"># htslib start is 1-based, medaka.common.Region object is 0-based</span>
+        <span class="n">region_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reg</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">reg</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">reg</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">calculate_pileup</span><span class="p">(</span>
+            <span class="n">region_str</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">bam</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span> <span class="n">num_dtypes</span><span class="p">,</span> <span class="n">dtypes</span><span class="p">,</span>
+            <span class="n">tag_name</span><span class="p">,</span> <span class="n">tag_value</span><span class="p">,</span> <span class="n">keep_missing</span>
+        <span class="p">)</span>
+
+        <span class="n">size_sizet</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uintp</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
+        <span class="n">np_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">ffi</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+            <span class="n">counts</span><span class="o">.</span><span class="n">counts</span><span class="p">,</span> <span class="n">size_sizet</span> <span class="o">*</span> <span class="n">counts</span><span class="o">.</span><span class="n">n_cols</span> <span class="o">*</span> <span class="n">featlen</span> <span class="o">*</span> <span class="n">num_dtypes</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uintp</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">n_cols</span><span class="p">,</span> <span class="n">featlen</span> <span class="o">*</span> <span class="n">num_dtypes</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">n_cols</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;minor&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">)])</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">copyto</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">],</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">ffi</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+            <span class="n">counts</span><span class="o">.</span><span class="n">major</span><span class="p">,</span> <span class="n">size_sizet</span> <span class="o">*</span> <span class="n">counts</span><span class="o">.</span><span class="n">n_cols</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uintp</span>
+        <span class="p">))</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">copyto</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;minor&#39;</span><span class="p">],</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">ffi</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+            <span class="n">counts</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span> <span class="n">size_sizet</span> <span class="o">*</span> <span class="n">counts</span><span class="o">.</span><span class="n">n_cols</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uintp</span>
+        <span class="p">))</span>
+
+        <span class="n">lib</span><span class="o">.</span><span class="n">destroy_plp_data</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np_counts</span><span class="p">,</span> <span class="n">positions</span>
+
+    <span class="c1"># split large regions for performance</span>
+    <span class="n">regions</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">region_split</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_process_region</span><span class="p">,</span> <span class="n">regions</span><span class="p">))</span>
+
+    <span class="c1"># First pass: need to check for discontinuities within chunks,</span>
+    <span class="c1"># these show up as &gt;2 changes in the major coordinate</span>
+    <span class="n">_results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">counts</span><span class="p">,</span> <span class="n">positions</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">move</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ediff1d</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">])</span>
+        <span class="n">gaps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">move</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gaps</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">counts</span><span class="p">,</span> <span class="n">positions</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Splitting discontiguous pileup region.&quot;</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">gaps</span><span class="p">:</span>
+                <span class="n">_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">counts</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">i</span><span class="p">],</span> <span class="n">positions</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">i</span><span class="p">]))</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">_results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">counts</span><span class="p">[</span><span class="n">start</span><span class="p">:],</span> <span class="n">positions</span><span class="p">[</span><span class="n">start</span><span class="p">:]))</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">_results</span>
+
+    <span class="c1"># Second pass: stitch abutting chunks together, anything not neighbouring</span>
+    <span class="c1"># is kept separate whether it came from the same chunk originally or not</span>
+
+    <span class="k">def</span> <span class="nf">_finalize_chunk</span><span class="p">(</span><span class="n">c_buf</span><span class="p">,</span> <span class="n">p_buf</span><span class="p">):</span>
+        <span class="n">chunk_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">c_buf</span><span class="p">)</span>
+        <span class="n">chunk_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">p_buf</span><span class="p">)</span>
+        <span class="c1"># get rid of &#39;first&#39; counts row for each datatype (counts of</span>
+        <span class="c1"># alternative bases)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">chunk_counts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">mask</span><span class="p">[[</span><span class="n">x</span> <span class="o">*</span> <span class="n">featlen</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_dtypes</span><span class="p">)]]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">chunk_counts</span> <span class="o">=</span> <span class="n">chunk_counts</span><span class="p">[:,</span> <span class="n">mask</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">chunk_counts</span><span class="p">,</span> <span class="n">chunk_positions</span>
+
+    <span class="n">counts_buffer</span><span class="p">,</span> <span class="n">positions_buffer</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">chunk_results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">last</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">counts</span><span class="p">,</span> <span class="n">positions</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">counts_buffer</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">first</span> <span class="o">-</span> <span class="n">last</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># new or contiguous</span>
+            <span class="n">counts_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+            <span class="n">positions_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># discontinuity</span>
+            <span class="n">chunk_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_finalize_chunk</span><span class="p">(</span><span class="n">counts_buffer</span><span class="p">,</span> <span class="n">positions_buffer</span><span class="p">))</span>
+            <span class="n">counts_buffer</span> <span class="o">=</span> <span class="p">[</span><span class="n">counts</span><span class="p">]</span>
+            <span class="n">positions_buffer</span> <span class="o">=</span> <span class="p">[</span><span class="n">positions</span><span class="p">]</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">counts_buffer</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">chunk_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_finalize_chunk</span><span class="p">(</span><span class="n">counts_buffer</span><span class="p">,</span> <span class="n">positions_buffer</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">chunk_results</span></div>
+
+
+<div class="viewcode-block" id="FeatureEncoder"><a class="viewcode-back" href="../../medaka.html#medaka.features.FeatureEncoder">[docs]</a><span class="k">class</span> <span class="nc">FeatureEncoder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">_ref_modes_</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;onehot&#39;</span><span class="p">,</span> <span class="s1">&#39;base_length&#39;</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">_norm_modes_</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;total&#39;</span><span class="p">,</span> <span class="s1">&#39;fwd_rev&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_mode</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_hp_len</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                 <span class="n">log_min</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalise</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;total&#39;</span><span class="p">,</span> <span class="n">with_depth</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">consensus_as_ref</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_compressed</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dtypes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,),</span>
+                 <span class="n">tag_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tag_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tag_keep_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sym_indels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Class to support multiple feature encodings</span>
+
+<span class="sd">        :param ref_mode: str, how to represent the reference.</span>
+<span class="sd">        :param max_hp_len: int, longest homopolymer run which can be represented, longer runs will be truncated.</span>
+<span class="sd">        :param log_min: int, take log10 of counts/fractions and set zeros to 10**log_min.</span>
+<span class="sd">        :param normalise: str, how to normalise the data.</span>
+<span class="sd">        :param with_depth: bool, whether to include a feature describing the total depth.</span>
+<span class="sd">        :param consensus_as_ref: bool, whether to use a naive max-count consensus instead of the reference.</span>
+<span class="sd">        :param is_compressed: bool, whether to use HP compression. If false, treat as uncompressed.</span>
+<span class="sd">        :param dtypes: iterable of str, read id prefixes of distinct data types that should be counted separately.</span>
+<span class="sd">        :param tag_name: two letter tag name by which to filter reads.</span>
+<span class="sd">        :param tag_value: integer value of tag for reads to keep.</span>
+<span class="sd">        :param tag_keep_missing: whether to keep reads when tag is missing.</span>
+<span class="sd">        :param sym_indels: bool, whether to count a lack of an insertion as a deletion.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref_mode</span> <span class="o">=</span> <span class="n">ref_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">consensus_as_ref</span> <span class="o">=</span> <span class="n">consensus_as_ref</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_hp_len</span> <span class="o">=</span> <span class="n">max_hp_len</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_min</span> <span class="o">=</span> <span class="n">log_min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="o">=</span> <span class="n">normalise</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span> <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">uint64</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_depth</span> <span class="o">=</span> <span class="n">with_depth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_compressed</span> <span class="o">=</span> <span class="n">is_compressed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s1">&#39;Feature&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span> <span class="o">=</span> <span class="n">dtypes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tag_name</span> <span class="o">=</span> <span class="n">tag_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tag_value</span> <span class="o">=</span> <span class="n">tag_value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tag_keep_missing</span> <span class="o">=</span> <span class="n">tag_keep_missing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sym_indels</span> <span class="o">=</span> <span class="n">sym_indels</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ref_modes_</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;ref_mode=</span><span class="si">{}</span><span class="s1"> is not one of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ref_modes_</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_norm_modes_</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;normalise=</span><span class="si">{}</span><span class="s1"> is not one of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">normalise</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_norm_modes_</span><span class="p">))</span>
+
+        <span class="n">opts</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">FeatureEncoder</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">opts</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">opts</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;self&#39;</span><span class="p">}</span>
+
+        <span class="n">read_decoding</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span><span class="p">:</span>
+            <span class="c1"># set up one-hot encoding of read run lengths for each dtype</span>
+            <span class="n">read_decoding</span> <span class="o">+=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="n">dtype</span><span class="p">,)</span> <span class="o">+</span> <span class="n">k</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span>
+                    <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_alphabet_</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_hp_len</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+
+            <span class="c1"># forward and reverse gaps</span>
+            <span class="n">read_decoding</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">dtype</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_mode</span> <span class="o">==</span> <span class="s1">&#39;onehot&#39;</span><span class="p">:</span>
+            <span class="n">ref_decoding</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;ref&#39;</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span>
+                <span class="n">alphabet</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_hp_len</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))]</span>
+            <span class="n">ref_decoding</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s1">&#39;ref&#39;</span><span class="p">,</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># gaps</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_mode</span> <span class="o">==</span> <span class="s1">&#39;base_length&#39;</span><span class="p">:</span>
+            <span class="n">ref_decoding</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ref_base&#39;</span><span class="p">,</span> <span class="s1">&#39;ref_length&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref_base_encoding</span> <span class="o">=</span> <span class="p">{</span><span class="n">b</span><span class="p">:</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_alphabet_</span> <span class="o">+</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">)}</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_mode</span> <span class="o">==</span> <span class="s1">&#39;index&#39;</span><span class="p">:</span>
+            <span class="n">ref_decoding</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ref_index&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ref_decoding</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoding</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">read_decoding</span> <span class="o">+</span> <span class="n">ref_decoding</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_depth</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">decoding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoding</span> <span class="o">+</span> <span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">,)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(((</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decoding</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Creating features with: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opts</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Label decoding is:</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decoding</span><span class="p">)</span>
+        <span class="p">)))</span>
+
+
+<div class="viewcode-block" id="FeatureEncoder.process_ref_seq"><a class="viewcode-back" href="../../medaka.html#medaka.features.FeatureEncoder.process_ref_seq">[docs]</a>    <span class="k">def</span> <span class="nf">process_ref_seq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref_name</span><span class="p">,</span> <span class="n">ref_fq</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Translate a sequence to RLE or truncated homopolymer form if required.</span>
+
+<span class="sd">        :param ref_name: str, name of contig within `ref_fq`.</span>
+<span class="sd">        :param ref_fq: path to reference fastq, or `SeqIO.index` obj.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_compressed</span><span class="p">:</span>  <span class="c1"># get (compressed) rle_encoded HP len from fq</span>
+            <span class="k">if</span> <span class="n">ref_fq</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;If homopolymers have been compressed, ref_fq must be provided&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">get_runs_from_fastq</span><span class="p">(</span><span class="n">ref_fq</span><span class="p">,</span> <span class="n">ref_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_hp_len</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># get (uncompressed) hp_lens from fq</span>
+            <span class="k">if</span> <span class="n">ref_fq</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;If max_hp_len &gt; 1, ref_fq must be provided&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref_fq</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">ref_fq</span> <span class="o">=</span> <span class="n">SeqIO</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">ref_fq</span><span class="p">,</span> <span class="s1">&#39;fastq&#39;</span><span class="p">)</span>
+            <span class="n">read</span> <span class="o">=</span> <span class="n">ref_fq</span><span class="p">[</span><span class="n">ref_name</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">seq_to_hp_lens</span><span class="p">(</span><span class="n">read</span><span class="o">.</span><span class="n">seq</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">feature_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Location of feature vector components.</span>
+
+<span class="sd">        :returns: dictionary mapping read data type and strand to feature vector</span>
+<span class="sd">            indices (a list over all bases)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">strand</span><span class="p">):</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">dt</span> <span class="ow">and</span> <span class="n">strand</span> <span class="o">==</span> <span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="k">for</span> <span class="n">dt</span><span class="p">,</span> <span class="n">strand</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span><span class="p">,</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+        <span class="p">}</span>
+
+
+<div class="viewcode-block" id="FeatureEncoder.bam_to_sample_c"><a class="viewcode-back" href="../../medaka.html#medaka.features.FeatureEncoder.bam_to_sample_c">[docs]</a>    <span class="k">def</span> <span class="nf">bam_to_sample_c</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reads_bam</span><span class="p">,</span> <span class="n">region</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts a section of an alignment pileup (as shown</span>
+<span class="sd">        by e.g. samtools tview) to a base frequency feature array</span>
+
+<span class="sd">        :param reads_bam: (sorted indexed) bam with read alignment to reference</span>
+<span class="sd">        :param region: `medaka.common.Region` object with ref_name, start and end attributes.</span>
+<span class="sd">        :param start: starting position within reference</span>
+<span class="sd">        :param end: ending position within reference</span>
+<span class="sd">        :returns: `medaka.common.Sample` object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_mode</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">consensus_as_ref</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_hp_len</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_min</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="o">==</span> <span class="s1">&#39;total&#39;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="o">==</span> <span class="s1">&#39;fwd_rev&#39;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_depth</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_compressed</span>
+
+        <span class="n">pileup</span> <span class="o">=</span> <span class="n">pileup_counts</span><span class="p">(</span>
+            <span class="n">region</span><span class="p">,</span> <span class="n">reads_bam</span><span class="p">,</span> <span class="n">dtype_prefixes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span><span class="p">,</span>
+            <span class="n">tag_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">tag_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag_value</span><span class="p">,</span>
+            <span class="n">keep_missing</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag_keep_missing</span>
+        <span class="p">)</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">counts</span><span class="p">,</span> <span class="n">positions</span> <span class="ow">in</span> <span class="n">pileup</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Pileup-feature is zero-length for </span><span class="si">{}</span><span class="s1"> indicating no reads in this region.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="p">(</span><span class="n">ref_name</span><span class="o">=</span><span class="n">region</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ref_seq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">postions</span><span class="o">=</span><span class="n">positions</span><span class="p">,</span> <span class="n">label_probs</span><span class="o">=</span><span class="kc">None</span>
+                    <span class="p">))</span>
+                <span class="k">continue</span>
+
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="o">!=</span> <span class="n">region</span><span class="o">.</span><span class="n">start</span> <span class="ow">or</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">!=</span> <span class="n">region</span><span class="o">.</span><span class="n">end</span><span class="p">:</span> <span class="c1"># TODO investigate off-by-one</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s1">&#39;Pileup counts do not span requested region, requested </span><span class="si">{}</span><span class="s1">, &#39;</span>
+                    <span class="s1">&#39;received </span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="c1"># find the position index for parent major position of all minor positions</span>
+            <span class="n">minor_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;minor&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">major_pos_at_minor_inds</span> <span class="o">=</span> <span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">][</span><span class="n">minor_inds</span><span class="p">]</span>
+            <span class="n">major_ind_at_minor_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">],</span> <span class="n">major_pos_at_minor_inds</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span>
+
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">depth</span><span class="p">[</span><span class="n">minor_inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">depth</span><span class="p">[</span><span class="n">major_ind_at_minor_inds</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sym_indels</span><span class="p">:</span>
+                <span class="c1"># make indels at ref and non-ref positions symmetric.</span>
+                <span class="c1"># major columns otherwise have counts of reads with and without a</span>
+                <span class="c1"># deletion, whilst minor (inserted) columns only have counts of</span>
+                <span class="c1"># the reads with an isertion.</span>
+                <span class="c1"># To make ref and non-ref positions symmetric, fill in counts of reads which don&#39;t have insertions</span>
+                <span class="c1"># i.e. depth_del = depth_major - depth_ins</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">is_rev</span><span class="p">),</span> <span class="n">inds</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">dt_depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">del_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[(</span><span class="n">dt</span><span class="p">,</span> <span class="n">is_rev</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+                    <span class="n">counts</span><span class="p">[</span><span class="n">minor_inds</span><span class="p">,</span> <span class="n">del_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">dt_depth</span><span class="p">[</span><span class="n">major_ind_at_minor_inds</span><span class="p">]</span> <span class="o">-</span> <span class="n">dt_depth</span><span class="p">[</span><span class="n">minor_inds</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="o">==</span> <span class="s1">&#39;total&#39;</span><span class="p">:</span>
+                <span class="c1"># normalize counts by total depth at major position, since the</span>
+                <span class="c1"># counts include deletions this is a count of spanning reads</span>
+                <span class="n">feature_array</span> <span class="o">=</span> <span class="n">counts</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="c1"># max just to avoid div error</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="o">==</span> <span class="s1">&#39;fwd_rev&#39;</span><span class="p">:</span>
+                <span class="c1"># normalize forward and reverse and by dtype</span>
+                <span class="n">feature_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">is_rev</span><span class="p">),</span> <span class="n">inds</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">dt_depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">dt_depth</span><span class="p">[</span><span class="n">minor_inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">dt_depth</span><span class="p">[</span><span class="n">major_ind_at_minor_inds</span><span class="p">]</span>
+                    <span class="n">feature_array</span><span class="p">[:</span> <span class="p">,</span> <span class="n">inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[:,</span> <span class="n">inds</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dt_depth</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="c1"># max just to avoid div error</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">feature_array</span> <span class="o">=</span> <span class="n">counts</span>
+
+            <span class="n">feature_array</span> <span class="o">=</span> <span class="n">feature_array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_dtype</span><span class="p">)</span>
+
+            <span class="n">sample</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="p">(</span>
+                <span class="n">ref_name</span><span class="o">=</span><span class="n">region</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">feature_array</span><span class="p">,</span>
+                <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ref_seq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">positions</span><span class="o">=</span><span class="n">positions</span><span class="p">,</span> <span class="n">label_probs</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">)</span>
+            <span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Processed </span><span class="si">{}</span><span class="s1"> (median depth </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">depth</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">samples</span></div>
+
+
+<div class="viewcode-block" id="FeatureEncoder.bam_to_sample"><a class="viewcode-back" href="../../medaka.html#medaka.features.FeatureEncoder.bam_to_sample">[docs]</a>    <span class="k">def</span> <span class="nf">bam_to_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reads_bam</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">read_fraction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force_py</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts a section of an alignment pileup (as shown</span>
+<span class="sd">        by e.g. samtools tview) to a base frequency feature array</span>
+
+<span class="sd">        :param reads_bam: (sorted indexed) bam with read alignment to reference</span>
+<span class="sd">        :param region: `medaka.common.Region` object with ref_name, start and end attributes.</span>
+<span class="sd">        :param reference: reference `.fasta`, should correspond to `bam`.</span>
+<span class="sd">            Required only for run length encoded references and reads.</span>
+<span class="sd">        :param read_fraction: fraction of reads to use, if `None` use all.</span>
+<span class="sd">        :param force_py: bool, if True, force use of python code (rather than c library).</span>
+<span class="sd">        :returns: iterable of `medaka.common.Sample` objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ref_rle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_ref_seq</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+
+        <span class="c1"># Try to use fast c function if we can, else fall back on this function</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">force_py</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ref_rle</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">read_fraction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bam_to_sample_c</span><span class="p">(</span><span class="n">reads_bam</span><span class="p">,</span> <span class="n">region</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Could not process sample with bam_to_sample_c, using python code instead.</span><span class="se">\n</span><span class="s1">(</span><span class="si">{}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+                <span class="k">pass</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tag_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Filtering alignments by tag is not supported in python code.&quot;</span><span class="p">)</span>
+
+        <span class="c1">#TODO: The code below will abut discontiguous regions in a pileup i.e.</span>
+        <span class="c1">#      where no reads span a reference position the major position</span>
+        <span class="c1">#      is dropped from the pileup. The correct behaviour would be to</span>
+        <span class="c1">#      split apart the sub-regions and return them separately.</span>
+        <span class="c1">#      The C implementation does this splitting.</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_compressed</span><span class="p">:</span>
+            <span class="n">aln_to_pairs</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">yield_compressed_pairs</span><span class="p">,</span> <span class="n">ref_rle</span><span class="o">=</span><span class="n">ref_rle</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_hp_len</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">aln_to_pairs</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_pairs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">aln_to_pairs</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_pairs_with_hp_len</span><span class="p">,</span> <span class="n">ref_seq</span><span class="o">=</span><span class="n">ref_rle</span><span class="p">)</span>
+
+        <span class="c1"># accumulate data in dicts</span>
+        <span class="n">aln_counters</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">Counter</span><span class="p">)</span>
+        <span class="n">ref_bases</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">pysam</span><span class="o">.</span><span class="n">AlignmentFile</span><span class="p">(</span><span class="n">reads_bam</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">bamfile</span><span class="p">:</span>
+            <span class="n">aln_reads</span> <span class="o">=</span> <span class="n">bamfile</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">region</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">region</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">read_fraction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">read_fraction</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">now</span><span class="p">())</span> <span class="o">*</span> <span class="n">region</span><span class="o">.</span><span class="n">start</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span><span class="p">)</span>
+                <span class="n">fraction</span> <span class="o">=</span> <span class="p">((</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_sample</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">low</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">aln_reads</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">aln_reads</span><span class="p">]</span>
+                <span class="n">n_reads</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">aln_reads</span><span class="p">)</span>
+                <span class="n">n_reads_to_keep</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fraction</span> <span class="o">*</span> <span class="n">n_reads</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">replace</span> <span class="o">=</span> <span class="n">n_reads_to_keep</span> <span class="o">&gt;</span> <span class="n">n_reads</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Resampling (replace </span><span class="si">{}</span><span class="s2">) from </span><span class="si">{}</span><span class="s2"> to </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{:.3f}</span><span class="s2">) for </span><span class="si">{}</span><span class="s2">&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">replace</span><span class="p">,</span> <span class="n">n_reads</span><span class="p">,</span> <span class="n">n_reads_to_keep</span><span class="p">,</span> <span class="n">fraction</span><span class="p">,</span> <span class="n">region</span><span class="p">))</span>
+                <span class="n">aln_reads</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">aln_reads</span><span class="p">,</span> <span class="n">n_reads_to_keep</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">replace</span><span class="p">)</span>
+
+            <span class="n">start</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">start</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">region</span><span class="o">.</span><span class="n">end</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;Inf&#39;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">aln</span> <span class="ow">in</span> <span class="n">aln_reads</span><span class="p">:</span>
+                <span class="c1"># get the dtype from the prefix of the query name</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">([</span><span class="n">aln</span><span class="o">.</span><span class="n">query_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span> <span class="k">for</span> <span class="n">dt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Skipping read </span><span class="si">{}</span><span class="s2"> as dtype not in </span><span class="si">{}</span><span class="s2">&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">aln</span><span class="o">.</span><span class="n">query_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtypes</span><span class="p">))</span>
+                    <span class="k">continue</span>
+
+                <span class="n">reverse</span> <span class="o">=</span> <span class="n">aln</span><span class="o">.</span><span class="n">is_reverse</span>
+                <span class="n">pairs</span> <span class="o">=</span> <span class="n">aln_to_pairs</span><span class="p">(</span><span class="n">aln</span><span class="p">)</span>
+                <span class="n">ins_count</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">dropwhile</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rpos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+                                                <span class="ow">or</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rpos</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">),</span> <span class="n">pairs</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="p">((</span><span class="n">pair</span><span class="o">.</span><span class="n">rpos</span> <span class="o">==</span> <span class="n">aln</span><span class="o">.</span><span class="n">reference_end</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span>
+                        <span class="p">(</span><span class="n">pair</span><span class="o">.</span><span class="n">rpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">pair</span><span class="o">.</span><span class="n">rpos</span> <span class="o">&gt;=</span> <span class="n">end</span><span class="p">)):</span>
+                        <span class="k">break</span>
+                    <span class="k">if</span> <span class="n">pair</span><span class="o">.</span><span class="n">rpos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">ins_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">ins_count</span> <span class="o">=</span> <span class="mi">0</span>
+                        <span class="n">current_pos</span> <span class="o">=</span> <span class="n">pair</span><span class="o">.</span><span class="n">rpos</span>
+
+                    <span class="p">(</span><span class="n">aln_counters</span><span class="p">[(</span><span class="n">current_pos</span><span class="p">,</span> <span class="n">ins_count</span><span class="p">)]</span>
+                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="n">dtype</span><span class="p">,</span> <span class="n">reverse</span><span class="p">,</span> <span class="n">pair</span><span class="o">.</span><span class="n">qbase</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">pair</span><span class="o">.</span><span class="n">qlen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_hp_len</span><span class="p">)]])</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                    <span class="n">ref_base</span> <span class="o">=</span> <span class="n">pair</span><span class="o">.</span><span class="n">rbase</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">if</span> <span class="n">pair</span><span class="o">.</span><span class="n">rbase</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;*&#39;</span>
+                    <span class="n">ref_bases</span><span class="p">[(</span><span class="n">current_pos</span><span class="p">,</span> <span class="n">ins_count</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ref_base</span><span class="p">,</span> <span class="n">pair</span><span class="o">.</span><span class="n">rlen</span><span class="p">)</span>
+
+
+            <span class="c1"># create feature array</span>
+            <span class="n">aln_cols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">aln_counters</span><span class="p">)</span>
+            <span class="n">feature_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+            <span class="n">feature_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">aln_cols</span><span class="p">,</span> <span class="n">feature_len</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_dtype</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">feature_array</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="n">ref_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">aln_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;base&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;run_length&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">)])</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">aln_cols</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span>
+                                                <span class="p">(</span><span class="s1">&#39;minor&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">)])</span>
+
+            <span class="k">if</span> <span class="n">aln_cols</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Pileup-feature is zero-length for </span><span class="si">{}</span><span class="s1"> indicating no reads in this region.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">region</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="p">(</span><span class="n">ref_name</span><span class="o">=</span><span class="n">region</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ref_seq</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">positions</span><span class="o">=</span><span class="n">positions</span><span class="p">,</span> <span class="n">label_probs</span><span class="o">=</span><span class="kc">None</span><span class="p">)]</span>
+
+            <span class="n">depth_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">aln_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+            <span class="c1"># keep track of which features are for fwd/rev reads of each dtype</span>
+            <span class="n">inds_by_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_indices</span>
+
+            <span class="c1">#TODO: refactor so common combinations of options can be handled as in C-function</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">((</span><span class="n">pos</span><span class="p">,</span> <span class="n">counts</span><span class="p">),</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">ref_base</span><span class="p">,</span> <span class="n">ref_len</span><span class="p">)))</span> <span class="ow">in</span> \
+                    <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">aln_counters</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span>
+                                <span class="nb">sorted</span><span class="p">(</span><span class="n">ref_bases</span><span class="o">.</span><span class="n">items</span><span class="p">()))):</span>
+                <span class="n">positions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">pos</span>
+                <span class="n">ref_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="n">ref_base</span><span class="p">],</span> <span class="n">ref_len</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">consensus_as_ref</span><span class="p">:</span>
+                    <span class="n">cons_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">cons_is_reverse</span><span class="p">,</span> <span class="n">cons_base</span><span class="p">,</span> <span class="n">cons_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoding</span><span class="p">[</span><span class="n">cons_i</span><span class="p">]</span>
+                    <span class="n">ref_base</span> <span class="o">=</span> <span class="n">cons_base</span> <span class="k">if</span> <span class="n">cons_base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span>
+                    <span class="n">ref_len</span> <span class="o">=</span> <span class="n">cons_length</span>
+
+                <span class="k">if</span> <span class="n">positions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;minor&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">major_depth</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+                    <span class="c1"># get the depth of each fwd and rev dtype</span>
+                    <span class="n">major_depths_by_type</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="p">:</span> <span class="nb">sum</span><span class="p">((</span><span class="n">counts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inds_by_type</span><span class="p">[</span><span class="n">t</span><span class="p">]))</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">inds_by_type</span><span class="p">}</span>
+                    <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">major_depths_by_type</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="o">==</span> <span class="n">major_depth</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sym_indels</span> <span class="ow">and</span> <span class="n">positions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;minor&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># make indels at ref and non-ref positions symmetric (see comment in bam_to_sample_c).</span>
+                    <span class="k">for</span> <span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">is_rev</span><span class="p">),</span> <span class="n">inds</span> <span class="ow">in</span> <span class="n">inds_by_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">del_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">is_rev</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+                        <span class="k">assert</span> <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">del_ind</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>
+                        <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">del_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">major_depths_by_type</span><span class="p">[(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">is_rev</span><span class="p">)]</span> <span class="o">-</span> <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">inds</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="o">==</span> <span class="s1">&#39;total&#39;</span><span class="p">:</span>
+                        <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/=</span> <span class="nb">max</span><span class="p">(</span><span class="n">major_depth</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalise</span> <span class="o">==</span> <span class="s1">&#39;fwd_rev&#39;</span><span class="p">:</span>
+                        <span class="c1"># normalize fwd and reverse seperately for each dtype</span>
+                        <span class="k">for</span> <span class="n">dt</span><span class="p">,</span> <span class="n">inds</span> <span class="ow">in</span> <span class="n">inds_by_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                            <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">inds</span><span class="p">]</span> <span class="o">/=</span> <span class="nb">max</span><span class="p">(</span><span class="n">major_depths_by_type</span><span class="p">[</span><span class="n">dt</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">depth_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">major_depth</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_depth</span><span class="p">:</span>
+                    <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="s1">&#39;depth&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">depth_array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># counts/proportions and depth will be normalised</span>
+                    <span class="c1"># when we take log of probs, make it easier for network by keeping all log of</span>
+                    <span class="c1"># probs positive. add self.log_min to any log probs so they are positive,</span>
+                    <span class="c1"># if self.log_min is 10, we can cope with depth up to 10**9</span>
+                    <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span>
+                                                   <span class="n">out</span><span class="o">=</span><span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+                    <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_min</span>
+                    <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:],</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_mode</span> <span class="o">==</span> <span class="s1">&#39;onehot&#39;</span><span class="p">:</span>
+                    <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[(</span><span class="s1">&#39;ref&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ref_base</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">ref_len</span><span class="p">))]]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_mode</span> <span class="o">==</span> <span class="s1">&#39;base_length&#39;</span><span class="p">:</span>
+                    <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="s1">&#39;ref_base&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_base_encoding</span><span class="p">[</span><span class="n">ref_base</span><span class="p">]</span>
+                    <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="s1">&#39;ref_length&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">ref_len</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_mode</span> <span class="o">==</span> <span class="s1">&#39;index&#39;</span><span class="p">:</span>
+                    <span class="c1"># index of count which ref would contribute to were it a read</span>
+                    <span class="n">feature_array</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="s1">&#39;ref_index&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[(</span><span class="kc">False</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">ref_len</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_hp_len</span><span class="p">),</span> <span class="n">ref_base</span><span class="p">)]</span>
+
+            <span class="n">sample</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="p">(</span><span class="n">ref_name</span><span class="o">=</span><span class="n">region</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">feature_array</span><span class="p">,</span>
+                            <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ref_seq</span><span class="o">=</span><span class="n">ref_array</span><span class="p">,</span>
+                            <span class="n">positions</span><span class="o">=</span><span class="n">positions</span><span class="p">,</span> <span class="n">label_probs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Processed </span><span class="si">{}</span><span class="s1"> (median depth </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">depth_array</span><span class="p">)))</span>
+
+            <span class="k">return</span> <span class="p">[</span><span class="n">sample</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="FeatureEncoder.bams_to_training_samples"><a class="viewcode-back" href="../../medaka.html#medaka.features.FeatureEncoder.bams_to_training_samples">[docs]</a>    <span class="k">def</span> <span class="nf">bams_to_training_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">truth_bam</span><span class="p">,</span> <span class="n">bam</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">reference</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">read_fraction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">truth_haplotag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Prepare training data chunks.</span>
+
+<span class="sd">        :param truth_bam: .bam file of truth aligned to ref to generate labels.</span>
+<span class="sd">        :param bam: input .bam file.</span>
+<span class="sd">        :param region: `medaka.common.Region` obj.</span>
+<span class="sd">            the reference will be parsed.</span>
+<span class="sd">        :param reference: reference `.fasta`, should correspond to `bam`.</span>
+<span class="sd">        :param read_fraction: fraction of reads to use, if `None` use all.</span>
+<span class="sd">        :param truth_haplotag: two letter tag name used for grouping truth labels by haplotype.</span>
+
+<span class="sd">        :returns: tuple of `medaka.common.Sample` objects.</span>
+
+<span class="sd">        .. note:: Chunks might be missing if `truth_bam` is provided and</span>
+<span class="sd">            regions with multiple mappings were encountered.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ref_rle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_ref_seq</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
+
+        <span class="c1"># pick function to get pairs for labels</span>
+        <span class="n">mock_compr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_hp_len</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_compressed</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_compressed</span><span class="p">:</span>
+            <span class="n">aln_to_pairs</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">yield_compressed_pairs</span>
+        <span class="k">elif</span> <span class="n">mock_compr</span><span class="p">:</span>
+            <span class="n">aln_to_pairs</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_pairs_with_hp_len</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">aln_to_pairs</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_pairs</span>
+
+        <span class="c1"># filter truth alignments to restrict ourselves to regions of the ref where the truth</span>
+        <span class="c1"># in unambiguous</span>
+        <span class="n">alns</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">TruthAlignment</span><span class="o">.</span><span class="n">bam_to_alignments</span><span class="p">(</span><span class="n">truth_bam</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">haplotag</span><span class="o">=</span><span class="n">truth_haplotag</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">alns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Filtering and grouping removed all alignments of truth to ref from </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">region</span><span class="p">))</span>
+
+        <span class="n">samples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">aln</span> <span class="ow">in</span> <span class="n">alns</span><span class="p">:</span>
+            <span class="c1"># truth_labels should be shape (pos, ploidy) and dtype (base, run_length)</span>
+            <span class="n">truth_pos</span><span class="p">,</span> <span class="n">truth_labels</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">TruthAlignment</span><span class="o">.</span><span class="n">get_positions_and_labels</span><span class="p">(</span><span class="n">aln</span><span class="p">,</span> <span class="n">aln_to_pairs</span><span class="p">)</span>
+            <span class="n">aln_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bam_to_sample</span><span class="p">(</span><span class="n">bam</span><span class="p">,</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Region</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">aln</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">aln</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">end</span><span class="p">),</span>
+                                             <span class="n">ref_rle</span><span class="p">,</span> <span class="n">read_fraction</span><span class="o">=</span><span class="n">read_fraction</span><span class="p">)</span>
+            <span class="n">ploidy</span> <span class="o">=</span> <span class="n">truth_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">aln_samples</span><span class="p">:</span>
+                <span class="c1"># Create labels according to positions in pileup</span>
+                <span class="n">padded_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">positions</span><span class="p">),</span> <span class="n">ploidy</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">truth_labels</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="c1"># fill with pad so that insertions not present in labels have correct gap-label</span>
+                <span class="n">padded_labels</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">pad</span><span class="p">)</span>
+                <span class="n">truth_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">in1d</span><span class="p">(</span><span class="n">truth_pos</span><span class="p">,</span> <span class="n">sample</span><span class="o">.</span><span class="n">positions</span><span class="p">))</span>
+                <span class="n">sample_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">in1d</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">positions</span><span class="p">,</span> <span class="n">truth_pos</span><span class="p">))</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">truth_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">alltrue</span><span class="p">(</span><span class="n">truth_pos</span><span class="p">[</span><span class="n">truth_inds</span><span class="p">]</span> <span class="o">==</span> <span class="n">sample</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">sample_inds</span><span class="p">])</span>
+
+                <span class="n">padded_labels</span><span class="p">[</span><span class="n">sample_inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">truth_labels</span><span class="p">[</span><span class="n">truth_inds</span><span class="p">]</span>
+
+                <span class="n">sample</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">_asdict</span><span class="p">()</span>
+                <span class="n">sample</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">padded_labels</span>
+                <span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Sample</span><span class="p">(</span><span class="o">**</span><span class="n">sample</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="alphabet_filter"><a class="viewcode-back" href="../../medaka.html#medaka.features.alphabet_filter">[docs]</a><span class="k">def</span> <span class="nf">alphabet_filter</span><span class="p">(</span><span class="n">sample_gen</span><span class="p">,</span> <span class="n">alphabet</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">filter_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filter_ref_seq</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Skip chunks in which labels and/or ref_seq contain bases not in `alphabet`.</span>
+
+<span class="sd">    :param sample_gen: generator of `medaka.common.Sample` named tuples.</span>
+<span class="sd">    :param alphabet: set of str of allowed bases. If None, automatically generated from decoding.</span>
+<span class="sd">    :param filter_labels: bool, whether to filter on labels.</span>
+<span class="sd">    :param filter_ref_seq: bool, whether to filter on ref_seq.</span>
+
+<span class="sd">    :yields: `medaka.common.Sample` named tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">alphabet</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">alphabet</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_alphabet_</span> <span class="o">+</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">])</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s1">&#39;AlphaFilter&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;alphabet: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">alphabet</span><span class="p">))</span>
+
+    <span class="n">alphabet</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">alphabet</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_find_bad_bases</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">alphabet</span><span class="p">):</span>
+        <span class="n">seq_rle</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">seq_rle</span><span class="p">[</span><span class="s1">&#39;base&#39;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bases</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">alphabet</span><span class="p">):</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="p">[</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">decoding</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bases</span> <span class="o">-</span> <span class="n">alphabet</span><span class="p">]</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Skipping </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">-</span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2"> bases) due to </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">positions</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">pos</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">pos</span><span class="p">[</span><span class="s1">&#39;major&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                                   <span class="nb">len</span><span class="p">(</span><span class="n">pos</span><span class="p">),</span> <span class="n">field</span><span class="p">,</span> <span class="n">diff</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sample_gen</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">filter_labels</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_find_bad_bases</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="n">alphabet</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">filter_ref_seq</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">ref_seq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_find_bad_bases</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s1">&#39;ref_seq&#39;</span><span class="p">,</span> <span class="n">alphabet</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">yield</span> <span class="n">s</span></div>
+
+
+<div class="viewcode-block" id="SampleGenerator"><a class="viewcode-back" href="../../medaka.html#medaka.features.SampleGenerator">[docs]</a><span class="k">class</span> <span class="nc">SampleGenerator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bam</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">rle_ref</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">truth_bam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">truth_haplotag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">read_fraction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chunk_len</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                 <span class="n">chunk_overlap</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">tag_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tag_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">tag_keep_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">enable_chunking</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate chunked inference (or training) samples.</span>
+
+<span class="sd">        :param bam: `.bam` containing alignments from which to generate samples.</span>
+<span class="sd">        :param region: a `medaka.common.Region` for which to generate samples.</span>
+<span class="sd">        :param model: a medaka model.</span>
+<span class="sd">        :param truth_bam: a `.bam` containing alignment of truth sequence to</span>
+<span class="sd">            `reference` sequence. Required only for creating training chunks.</span>
+<span class="sd">        :param truth_haplotag: two letter tag name used for grouping truth labels by haplotype.</span>
+<span class="sd">        :param reference: reference `.fasta`, should correspond to `bam`.</span>
+<span class="sd">        :param tag_name: two letter tag name by which to filter reads.</span>
+<span class="sd">        :param tag_value: integer value of tag for reads to keep.</span>
+<span class="sd">        :param tag_keep_missing: whether to keep reads when tag is missing.</span>
+<span class="sd">        :param enable_chunking: when yielding samples, do so in chunks.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s2">&quot;Sampler&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sample_type</span> <span class="o">=</span> <span class="s2">&quot;training&quot;</span> <span class="k">if</span> <span class="n">truth_bam</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;consensus&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing sampler for </span><span class="si">{}</span><span class="s2"> of region </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_type</span><span class="p">,</span> <span class="n">region</span><span class="p">))</span>
+        <span class="k">with</span> <span class="n">medaka</span><span class="o">.</span><span class="n">datastore</span><span class="o">.</span><span class="n">DataStore</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fencoder_args</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;medaka_features_kwargs&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fencoder</span> <span class="o">=</span> <span class="n">FeatureEncoder</span><span class="p">(</span>
+            <span class="n">tag_name</span><span class="o">=</span><span class="n">tag_name</span><span class="p">,</span> <span class="n">tag_value</span><span class="o">=</span><span class="n">tag_value</span><span class="p">,</span> <span class="n">tag_keep_missing</span><span class="o">=</span><span class="n">tag_keep_missing</span><span class="p">,</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fencoder_args</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bam</span> <span class="o">=</span> <span class="n">bam</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">region</span> <span class="o">=</span> <span class="n">region</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rle_ref</span> <span class="o">=</span> <span class="n">rle_ref</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">truth_bam</span> <span class="o">=</span> <span class="n">truth_bam</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">truth_haplotag</span> <span class="o">=</span> <span class="n">truth_haplotag</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_fraction</span> <span class="o">=</span> <span class="n">read_fraction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_len</span> <span class="o">=</span> <span class="n">chunk_len</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_overlap</span> <span class="o">=</span> <span class="n">chunk_overlap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enable_chunking</span> <span class="o">=</span> <span class="n">enable_chunking</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># the base data to be chunked</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_quarantined</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span> <span class="c1"># samples which are shorter than chunk size</span>
+
+        <span class="c1">#TODO: check reference has been given if model/feature encoder requires it</span>
+
+
+    <span class="k">def</span> <span class="nf">_fill_features</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_quarantined</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">t0</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">truth_bam</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fencoder</span><span class="o">.</span><span class="n">bams_to_training_samples</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">truth_bam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rle_ref</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">read_fraction</span><span class="p">,</span> <span class="n">truth_haplotag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">truth_haplotag</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fencoder</span><span class="o">.</span><span class="n">bam_to_sample</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">region</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rle_ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_fraction</span><span class="p">)</span>
+            <span class="n">t1</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Took </span><span class="si">{:.2f}</span><span class="s2">s to make features.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t1</span><span class="o">-</span><span class="n">t0</span><span class="p">))</span>
+
+
+    <span class="k">def</span> <span class="nf">_quarantine_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add sample name and pileup width to a list.&quot;&quot;&quot;</span>
+        <span class="c1"># Note: the below assumes we haven&#39;t split a pileup on minor positions.</span>
+        <span class="c1"># This should be the case: chunking on minor positions only occurs for</span>
+        <span class="c1"># larger regions.</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">first_pos</span>
+        <span class="n">end</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">last_pos</span>
+        <span class="n">end</span> <span class="o">+=</span> <span class="mi">1</span> <span class="c1"># end exclusive</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_quarantined</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
+            <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">Region</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">),</span> <span class="n">sample</span><span class="o">.</span><span class="n">size</span>
+        <span class="p">))</span>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">samples</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterator over chunked samples.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_features</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_quarantined</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">is_empty</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enable_chunking</span><span class="p">:</span>
+                <span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_len</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Region </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2"> positions) is smaller than inference chunk length </span><span class="si">{}</span><span class="s2">, quarantining.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">source</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_len</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_quarantine_sample</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">&quot;Chunking pileup data into </span><span class="si">{}</span><span class="s2"> columns with overlap of </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">chunk_len</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_overlap</span><span class="p">))</span>
+                <span class="n">chunks</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">chunks</span><span class="p">(</span><span class="n">chunk_len</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunk_len</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">chunk_overlap</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Pileup for </span><span class="si">{}</span><span class="s2"> is of width </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+            <span class="k">yield from</span> <span class="n">alphabet_filter</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_samples"><a class="viewcode-back" href="../../medaka.html#medaka.features.create_samples">[docs]</a><span class="k">def</span> <span class="nf">create_samples</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Creation of unlabelled samples is currently disabled&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_labelled_samples_worker</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">region</span><span class="p">):</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s1">&#39;PrepWork&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Processing region </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">region</span><span class="p">))</span>
+    <span class="n">data_gen</span> <span class="o">=</span> <span class="n">SampleGenerator</span><span class="p">(</span>
+        <span class="n">args</span><span class="o">.</span><span class="n">bam</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">rle_ref</span><span class="p">,</span> <span class="n">truth_bam</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">truth</span><span class="p">,</span> <span class="n">truth_haplotag</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">truth_haplotag</span><span class="p">,</span>
+        <span class="n">read_fraction</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">read_fraction</span><span class="p">,</span> <span class="n">chunk_len</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_len</span><span class="p">,</span> <span class="n">chunk_overlap</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_ovlp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">data_gen</span><span class="o">.</span><span class="n">samples</span><span class="p">),</span> <span class="n">region</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">data_gen</span><span class="o">.</span><span class="n">fencoder_args</span><span class="p">),</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">data_gen</span><span class="o">.</span><span class="n">fencoder</span><span class="o">.</span><span class="n">decoding</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="create_labelled_samples"><a class="viewcode-back" href="../../medaka.html#medaka.features.create_labelled_samples">[docs]</a><span class="k">def</span> <span class="nf">create_labelled_samples</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s1">&#39;Prepare&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">chunk_ovlp</span> <span class="o">&gt;=</span> <span class="n">args</span><span class="o">.</span><span class="n">chunk_len</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;chunk_ovlp </span><span class="si">{}</span><span class="s1"> is not smaller than chunk_len </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">chunk_ovlp</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">chunk_len</span><span class="p">))</span>
+    <span class="n">regions</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_regions</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">bam</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">regions</span><span class="p">)</span>
+    <span class="n">reg_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;</span><span class="se">\t\t\t</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">regions</span><span class="p">])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Got regions:</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reg_str</span><span class="p">))</span>
+
+    <span class="n">labels_counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+
+    <span class="n">no_data</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">with</span> <span class="n">medaka</span><span class="o">.</span><span class="n">datastore</span><span class="o">.</span><span class="n">DataStore</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ds</span><span class="p">:</span>
+        <span class="c1"># write feature options to file</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing meta data to file.&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">medaka</span><span class="o">.</span><span class="n">datastore</span><span class="o">.</span><span class="n">DataStore</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">model</span><span class="p">)</span> <span class="k">as</span> <span class="n">model</span><span class="p">:</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span> <span class="n">k</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;medaka_features_kwargs&#39;</span><span class="p">,</span> <span class="s1">&#39;medaka_feature_decoding&#39;</span><span class="p">)}</span>
+        <span class="n">ds</span><span class="o">.</span><span class="n">update_meta</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+        <span class="c1"># TODO: this parallelism would be better in `SampleGenerator.bams_to_training_samples`</span>
+        <span class="c1">#       since training alignments are usually chunked.</span>
+        <span class="k">with</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ProcessPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="c1"># break up overly long chunks</span>
+            <span class="n">MAX_SIZE</span><span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">1e6</span><span class="p">)</span>
+            <span class="n">regions</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">MAX_SIZE</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">regions</span><span class="p">))</span>
+            <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">_labelled_samples_worker</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">reg</span><span class="p">)</span> <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">regions</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">fut</span> <span class="ow">in</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">fut</span><span class="o">.</span><span class="n">exception</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">samples</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">fencoder_args</span><span class="p">,</span> <span class="n">fencoder_decoder</span> <span class="o">=</span> <span class="n">fut</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing </span><span class="si">{}</span><span class="s2"> samples for region </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">),</span> <span class="n">region</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
+                        <span class="n">ds</span><span class="o">.</span><span class="n">write_sample</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">fut</span><span class="o">.</span><span class="n">exception</span><span class="p">())</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">fut</span><span class="o">.</span><span class="n">result</span><span class="p">())</span>
+                <span class="n">fut</span><span class="o">.</span><span class="n">_result</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># python issue 27144</span>
+        <span class="n">no_data</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">n_samples</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">no_data</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Warning: No training data was written to file, deleting output.&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">)</span></div>
+
+
+<span class="c1"># read / reference fasta / fastq compression</span>
+<span class="n">_scores_</span> <span class="o">=</span> <span class="s1">&#39;!&quot;#$%&amp;</span><span class="se">\&#39;</span><span class="s1">()*+,-./0123456789:;&lt;=&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~&#39;</span>
+
+
+<div class="viewcode-block" id="get_runs_from_fastq"><a class="viewcode-back" href="../../medaka.html#medaka.features.get_runs_from_fastq">[docs]</a><span class="k">def</span> <span class="nf">get_runs_from_fastq</span><span class="p">(</span><span class="n">fastq</span><span class="p">,</span> <span class="n">ref_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get run length encoding of a read.</span>
+<span class="sd">    :param fastq: str, path to fastq file or `SeqIO.index` object.</span>
+<span class="sd">    :param ref_name: str, name of read with fastq.</span>
+<span class="sd">    :returns: structured `numpy.ndarray` with dtype=[(&#39;start&#39;, int), (&#39;length&#39;, int)].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fastq</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">fastq</span> <span class="o">=</span> <span class="n">SeqIO</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">fastq</span><span class="p">,</span> <span class="s1">&#39;fastq&#39;</span><span class="p">)</span>
+    <span class="n">read</span> <span class="o">=</span> <span class="n">fastq</span><span class="p">[</span><span class="n">ref_name</span><span class="p">]</span>
+    <span class="n">lengths</span> <span class="o">=</span> <span class="n">read</span><span class="o">.</span><span class="n">letter_annotations</span><span class="p">[</span><span class="s1">&#39;phred_quality&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">lengths_to_rle</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compress_seq"><a class="viewcode-back" href="../../medaka.html#medaka.features.compress_seq">[docs]</a><span class="k">def</span> <span class="nf">compress_seq</span><span class="p">(</span><span class="n">read</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compress homopolymers within a basecall, encoding their lengths in qscores.</span>
+
+<span class="sd">    :param read: `Bio.SeqRecord.SeqRecord` object</span>
+<span class="sd">    :returns: (str read.description,</span>
+<span class="sd">               str compressed sequence,</span>
+<span class="sd">               str qscores,</span>
+<span class="sd">               structured array with fields `start`, `length`, and `value`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">seq_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span><span class="n">read</span><span class="o">.</span><span class="n">seq</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;U1&#39;</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">read</span><span class="o">.</span><span class="n">seq</span><span class="p">))</span>
+    <span class="n">runs</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">rle</span><span class="p">(</span><span class="n">seq_array</span><span class="p">,</span> <span class="n">low_mem</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">compressed_seq</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">runs</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+    <span class="c1"># we can only encode up to a homopolymer length 93</span>
+    <span class="c1"># if we want to the score decoding in pysam to correspond to counts</span>
+    <span class="c1"># (we could get to 94 if we make score zero correspond to count 1).</span>
+    <span class="n">is_too_long</span> <span class="o">=</span> <span class="n">runs</span><span class="p">[</span><span class="s1">&#39;length&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_scores_</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">is_too_long</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Some homopolymers in </span><span class="si">{}</span><span class="s1"> are longer than the longest supported length</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">read</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_too_long</span><span class="p">)</span>
+        <span class="n">runs</span><span class="p">[</span><span class="s1">&#39;length&#39;</span><span class="p">][</span><span class="n">inds</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_scores_</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">compressed_scores</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span> <span class="n">_scores_</span><span class="p">[</span><span class="n">run</span><span class="p">[</span><span class="s1">&#39;length&#39;</span><span class="p">]]</span> <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">read</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="n">compressed_seq</span><span class="p">,</span> <span class="n">compressed_scores</span><span class="p">,</span> <span class="n">runs</span></div>
+
+
+<div class="viewcode-block" id="compress"><a class="viewcode-back" href="../../medaka.html#medaka.features.compress">[docs]</a><span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">formats</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="s1">&#39;fasta&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">:</span> <span class="s1">&#39;fastq&#39;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">formats</span><span class="p">:</span>
+        <span class="n">msg</span><span class="o">=</span><span class="s1">&#39;Could not guess file format of </span><span class="si">{}</span><span class="s1">, rename to .f(ast)a/.f(ast)q&#39;</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">))</span>
+
+    <span class="n">reads</span> <span class="o">=</span> <span class="n">SeqIO</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">formats</span><span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">threads</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">threads</span><span class="p">)</span>
+        <span class="n">compressed</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">compress_seq</span><span class="p">,</span> <span class="n">reads</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">compressed</span> <span class="o">=</span> <span class="p">(</span><span class="n">compress_seq</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reads</span><span class="p">)</span>
+
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">description</span><span class="p">,</span> <span class="n">compressed_seq</span><span class="p">,</span> <span class="n">compressed_scores</span><span class="p">,</span> <span class="n">runs</span> <span class="ow">in</span> <span class="n">compressed</span><span class="p">:</span>
+        <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;@</span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">description</span><span class="p">,</span> <span class="n">compressed_seq</span><span class="p">))</span>
+        <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">compressed_scores</span><span class="p">))</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">now</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Compressing </span><span class="si">{}</span><span class="s1"> took </span><span class="si">{:.3f}</span><span class="s1">s.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">t1</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-19, Oxford Nanopore Technologies
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

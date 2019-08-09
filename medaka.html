@@ -1,0 +1,1987 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>medaka package &mdash; Medaka 0.8.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="History and Future Directions" href="future.html" />
+    <link rel="prev" title="Development" href="development.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Medaka
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="snp.html">Experimental Variant calling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough</a></li>
+<li class="toctree-l1"><a class="reference internal" href="draft_origin.html">Origin of the draft sequence</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="development.html">Development</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="development.html#api-reference">API reference</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">medaka package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.common">medaka.common module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.datastore">medaka.datastore module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.features">medaka.features module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.inference">medaka.inference module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.keras_ext">medaka.keras_ext module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.labels">medaka.labels module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.medaka">medaka.medaka module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.medaka_counts">medaka.medaka_counts module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.models">medaka.models module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.stitch">medaka.stitch module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.variant">medaka.variant module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka.vcf">medaka.vcf module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-medaka">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="future.html">History and Future Directions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Medaka</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="development.html">Development</a> &raquo;</li>
+        
+      <li>medaka package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/medaka.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="medaka-package">
+<h1>medaka package<a class="headerlink" href="#medaka-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-medaka.common">
+<span id="medaka-common-module"></span><h2>medaka.common module<a class="headerlink" href="#module-medaka.common" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medaka.common.AlignPos">
+<em class="property">class </em><code class="descclassname">medaka.common.</code><code class="descname">AlignPos</code><span class="sig-paren">(</span><em>qpos</em>, <em>qbase</em>, <em>rpos</em>, <em>rbase</em><span class="sig-paren">)</span><a class="headerlink" href="#medaka.common.AlignPos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="medaka.common.AlignPos.qbase">
+<code class="descname">qbase</code><a class="headerlink" href="#medaka.common.AlignPos.qbase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.AlignPos.qpos">
+<code class="descname">qpos</code><a class="headerlink" href="#medaka.common.AlignPos.qpos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.AlignPos.rbase">
+<code class="descname">rbase</code><a class="headerlink" href="#medaka.common.AlignPos.rbase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.AlignPos.rpos">
+<code class="descname">rpos</code><a class="headerlink" href="#medaka.common.AlignPos.rpos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.ComprAlignPos">
+<code class="descclassname">medaka.common.</code><code class="descname">ComprAlignPos</code><a class="headerlink" href="#medaka.common.ComprAlignPos" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#medaka.common.AlignPos" title="medaka.common.AlignPos"><code class="xref py py-class docutils literal notranslate"><span class="pre">medaka.common.AlignPos</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="medaka.common.OverlapException">
+<em class="property">exception </em><code class="descclassname">medaka.common.</code><code class="descname">OverlapException</code><a class="reference internal" href="_modules/medaka/common.html#OverlapException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.OverlapException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.common.Region">
+<em class="property">class </em><code class="descclassname">medaka.common.</code><code class="descname">Region</code><a class="reference internal" href="_modules/medaka/common.html#Region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#medaka.common.Region" title="medaka.common.Region"><code class="xref py py-class docutils literal notranslate"><span class="pre">medaka.common.Region</span></code></a></p>
+<dl class="classmethod">
+<dt id="medaka.common.Region.from_string">
+<em class="property">classmethod </em><code class="descname">from_string</code><span class="sig-paren">(</span><em>region</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#Region.from_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Region.from_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse region string into <cite>Region</cite> objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>region</strong> – region str</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Region</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s1">&#39;Ecoli&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">Region</span><span class="p">(</span><span class="n">ref_name</span><span class="o">=</span><span class="s1">&#39;Ecoli&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Region</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s1">&#39;Ecoli:1000-2000&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">Region</span><span class="p">(</span><span class="n">ref_name</span><span class="o">=</span><span class="s1">&#39;Ecoli&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Region</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s1">&#39;Ecoli:1000&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">Region</span><span class="p">(</span><span class="n">ref_name</span><span class="o">=</span><span class="s1">&#39;Ecoli&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Region</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s1">&#39;Ecoli:-1000&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">Region</span><span class="p">(</span><span class="n">ref_name</span><span class="o">=</span><span class="s1">&#39;Ecoli&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Region</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="s1">&#39;Ecoli:500-&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">Region</span><span class="p">(</span><span class="n">ref_name</span><span class="o">=</span><span class="s1">&#39;Ecoli&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Region.name">
+<code class="descname">name</code><a class="headerlink" href="#medaka.common.Region.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Samtools-style region string, zero-base end exclusive.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Region.size">
+<code class="descname">size</code><a class="headerlink" href="#medaka.common.Region.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.common.Region.split">
+<code class="descname">split</code><span class="sig-paren">(</span><em>size</em>, <em>overlap=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#Region.split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Region.split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split region into sub-regions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>size</strong> – size of sub-regions.</li>
+<li><strong>overlap</strong> – overlap between ends of sub-regions.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a list of sub-regions.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.common.Sample">
+<em class="property">class </em><code class="descclassname">medaka.common.</code><code class="descname">Sample</code><a class="reference internal" href="_modules/medaka/common.html#Sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#medaka.common.Sample" title="medaka.common.Sample"><code class="xref py py-class docutils literal notranslate"><span class="pre">medaka.common.Sample</span></code></a></p>
+<dl class="class">
+<dt id="medaka.common.Sample.Relationship">
+<em class="property">class </em><code class="descname">Relationship</code><a class="reference internal" href="_modules/medaka/common.html#Sample.Relationship"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Sample.Relationship" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<dl class="attribute">
+<dt id="medaka.common.Sample.Relationship.different_ref_name">
+<code class="descname">different_ref_name</code><em class="property"> = 'Samples come from different reference contigs.'</em><a class="headerlink" href="#medaka.common.Sample.Relationship.different_ref_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.Relationship.forward_abutted">
+<code class="descname">forward_abutted</code><em class="property"> = 'The end of s1 abuts the start of s2.'</em><a class="headerlink" href="#medaka.common.Sample.Relationship.forward_abutted" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.Relationship.forward_gapped">
+<code class="descname">forward_gapped</code><em class="property"> = 's2 follows s1 with a gab inbetween.'</em><a class="headerlink" href="#medaka.common.Sample.Relationship.forward_gapped" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.Relationship.forward_overlap">
+<code class="descname">forward_overlap</code><em class="property"> = 'The end of s1 overlaps the start of s2.'</em><a class="headerlink" href="#medaka.common.Sample.Relationship.forward_overlap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.Relationship.reverse_abutted">
+<code class="descname">reverse_abutted</code><em class="property"> = 'The end of s2 abuts the start of s1.'</em><a class="headerlink" href="#medaka.common.Sample.Relationship.reverse_abutted" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.Relationship.reverse_gapped">
+<code class="descname">reverse_gapped</code><em class="property"> = 's1 follows s2 with a gab inbetween.'</em><a class="headerlink" href="#medaka.common.Sample.Relationship.reverse_gapped" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.Relationship.reverse_overlap">
+<code class="descname">reverse_overlap</code><em class="property"> = 'The end of s2 overlaps the start of s1.'</em><a class="headerlink" href="#medaka.common.Sample.Relationship.reverse_overlap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.Relationship.s1_within_s2">
+<code class="descname">s1_within_s2</code><em class="property"> = 's1 is fully contained within s2.'</em><a class="headerlink" href="#medaka.common.Sample.Relationship.s1_within_s2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.Relationship.s2_within_s1">
+<code class="descname">s2_within_s1</code><em class="property"> = 's2 is fully contained within s1.'</em><a class="headerlink" href="#medaka.common.Sample.Relationship.s2_within_s1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.common.Sample.chunks">
+<code class="descname">chunks</code><span class="sig-paren">(</span><em>chunk_len=1000</em>, <em>overlap=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#Sample.chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Sample.chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create overlapping chunks of self.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>chunk_len</strong> – chunk length (number of columns)</li>
+<li><strong>overlap</strong> – overlap length.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last">chunked <a class="reference internal" href="#medaka.common.Sample" title="medaka.common.Sample"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sample</span></code></a> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="medaka.common.Sample.decode_sample_name">
+<em class="property">static </em><code class="descname">decode_sample_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#Sample.decode_sample_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Sample.decode_sample_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode a the result of Sample.name into a dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – <cite>Sample</cite> object.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.first_pos">
+<code class="descname">first_pos</code><a class="headerlink" href="#medaka.common.Sample.first_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zero-based first reference co-ordinate.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="medaka.common.Sample.from_samples">
+<em class="property">static </em><code class="descname">from_samples</code><span class="sig-paren">(</span><em>samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#Sample.from_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Sample.from_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a sample by concatenating an iterable of <cite>Sample</cite> objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>samples</strong> – iterable of <cite>Sample</cite> objects.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><cite>Sample</cite> obj</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.is_empty">
+<code class="descname">is_empty</code><a class="headerlink" href="#medaka.common.Sample.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.last_pos">
+<code class="descname">last_pos</code><a class="headerlink" href="#medaka.common.Sample.last_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zero-based (end inclusive) last reference co-ordinate.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.name">
+<code class="descname">name</code><a class="headerlink" href="#medaka.common.Sample.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create zero-based (end inclusive) samtools-style region string.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="medaka.common.Sample.overlap_indices">
+<em class="property">static </em><code class="descname">overlap_indices</code><span class="sig-paren">(</span><em>s1</em>, <em>s2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#Sample.overlap_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Sample.overlap_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find indices to trim end of s1 which overlaps start of s2 to allow concatenation without gaps or overlap,:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="n">end1</span>
+           <span class="o">|</span>
+<span class="n">s1</span> <span class="o">............</span>
+           <span class="o">|</span>
+<span class="n">s2</span>      <span class="o">...............</span>
+           <span class="o">|</span>
+           <span class="n">start2</span>
+</pre></div>
+</div>
+<p>such that
+.. code: python</p>
+<blockquote>
+<div>Sample.from_samples([s1.slice(slice(0, end1)), s2.slice(slice(start2, None))])</div></blockquote>
+<p>would join them without gaps or overlap.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>s1</strong> – First <cite>Sample</cite> object.</li>
+<li><strong>s2</strong> – Second <cite>Sample</cite> object.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(int end1: start of overlap in s1, int start2: end of overlap in s2,
+such that s1.positions[:end1] could be concatenated with
+s2.positions[start2:] to join them without gaps or overlap.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><cite>OverlapException</cite> if samples do not overlap nor abut.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="medaka.common.Sample.relative_position">
+<em class="property">static </em><code class="descname">relative_position</code><span class="sig-paren">(</span><em>s1</em>, <em>s2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#Sample.relative_position"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Sample.relative_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the relative position of two samples in genomic coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s2</strong> (<em>s1</em><em>,</em>) – <cite>medaka.common.Sample</cite> objs.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><cite>Relationship</cite> enum member.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.size">
+<code class="descname">size</code><a class="headerlink" href="#medaka.common.Sample.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.common.Sample.slice">
+<code class="descname">slice</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#Sample.slice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.Sample.slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Slice fields along the genomic axis</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – slice or index (on array indices)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><cite>Sample</cite> obj with views of slices of the original <cite>Sample</cite>.</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;minor&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">feat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pos</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">(</span><span class="s1">&#39;contig1&#39;</span><span class="p">,</span> <span class="n">feat</span> <span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">Sample(ref_name=&#39;contig1&#39;, features=2, labels=None, ref_seq=None, positions=(1, 1), label_probs=None)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">Sample(ref_name=&#39;contig1&#39;, features=array([1, 2]), labels=None, ref_seq=None, positions=array([(1, 0), (1, 1)], dtype=[(&#39;major&#39;, &#39;&lt;i8&#39;), (&#39;minor&#39;, &#39;&lt;i8&#39;)]), label_probs=None)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.common.Sample.span">
+<code class="descname">span</code><a class="headerlink" href="#medaka.common.Sample.span" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of sample in terms of reference positions.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.common.ThreadsafeIter">
+<em class="property">class </em><code class="descclassname">medaka.common.</code><code class="descname">ThreadsafeIter</code><span class="sig-paren">(</span><em>it</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#ThreadsafeIter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.ThreadsafeIter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Takes an iterator and makes it thread-safe by
+serializing call to <cite>next</cite> method.</p>
+<p><a class="reference external" href="http://anandology.com/blog/using-iterators-and-generators/">http://anandology.com/blog/using-iterators-and-generators/</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.background_generator">
+<code class="descclassname">medaka.common.</code><code class="descname">background_generator</code><span class="sig-paren">(</span><em>generator</em>, <em>max_size</em>, <em>daemon=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#background_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.background_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a generator in background thread.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>max_size</strong> – maximum number of items from the generator to cache.</li>
+<li><strong>daemon</strong> – run generator in daemon thread</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.get_named_logger">
+<code class="descclassname">medaka.common.</code><code class="descname">get_named_logger</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#get_named_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.get_named_logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.get_pairs">
+<code class="descclassname">medaka.common.</code><code class="descname">get_pairs</code><span class="sig-paren">(</span><em>aln</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#get_pairs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.get_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return generator of pairs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>aln</strong> – <cite>pysam.AlignedSegment</cite> object.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">generator of <cite>ComprAlignPos</cite> objects.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.get_pairs_with_hp_len">
+<code class="descclassname">medaka.common.</code><code class="descname">get_pairs_with_hp_len</code><span class="sig-paren">(</span><em>aln</em>, <em>ref_seq=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#get_pairs_with_hp_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.get_pairs_with_hp_len" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return generator of pairs in which the qbase is not just the base,
+but is decorated with extra information. E.g. an A which is part of a basecalled
+6mer HP would be AAAAAA.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>aln</strong> – <cite>pysam.AlignedSegment</cite> object.</li>
+<li><strong>ref_seq</strong> – str containing reference sequence or result of
+<cite>seq_to_hp_lens</cite> (ref_seq), or None</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><cite>ComprAlignPos</cite> objects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.get_regions">
+<code class="descclassname">medaka.common.</code><code class="descname">get_regions</code><span class="sig-paren">(</span><em>bam</em>, <em>region_strs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#get_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.get_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create <cite>Region</cite> objects from a bam and region strings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>bam</strong> – <cite>.bam</cite> file.</li>
+<li><strong>region_strs</strong> – iterable of str in zero-based (samtools-like)
+region format e.g. ref:start-end or filepath containing a
+region string per line.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list of <cite>Region</cite> objects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.grouper">
+<code class="descclassname">medaka.common.</code><code class="descname">grouper</code><span class="sig-paren">(</span><em>gen</em>, <em>batch_size=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#grouper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.grouper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group together elements of an iterable, yielding remainder without padding.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.lengths_to_rle">
+<code class="descclassname">medaka.common.</code><code class="descname">lengths_to_rle</code><span class="sig-paren">(</span><em>lengths</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#lengths_to_rle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.lengths_to_rle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.loose_version_sort">
+<code class="descclassname">medaka.common.</code><code class="descname">loose_version_sort</code><span class="sig-paren">(</span><em>it</em>, <em>key=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#loose_version_sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.loose_version_sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to sort iterable with distutils.version.LooseVersion, falling back on regular sort.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loose_version_sort</span><span class="p">([</span><span class="s1">&#39;chr10&#39;</span><span class="p">,</span> <span class="s1">&#39;chr2&#39;</span><span class="p">,</span> <span class="s1">&#39;chr1&#39;</span><span class="p">])</span>
+<span class="go">[&#39;chr1&#39;, &#39;chr2&#39;, &#39;chr10&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">([</span><span class="s1">&#39;chr10&#39;</span><span class="p">,</span> <span class="s1">&#39;chr2&#39;</span><span class="p">,</span> <span class="s1">&#39;chr1&#39;</span><span class="p">])</span>
+<span class="go">[&#39;chr1&#39;, &#39;chr10&#39;, &#39;chr2&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loose_version_sort</span><span class="p">([</span><span class="s1">&#39;chr</span><span class="si">{}</span><span class="s1">c</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">2</span><span class="p">])])</span>
+<span class="go">[&#39;chr1c1&#39;, &#39;chr1c2&#39;, &#39;chr1c10&#39;, &#39;chr2c1&#39;, &#39;chr2c2&#39;, &#39;chr2c10&#39;, &#39;chr10c1&#39;, &#39;chr10c2&#39;, &#39;chr10c10&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.mkdir_p">
+<code class="descclassname">medaka.common.</code><code class="descname">mkdir_p</code><span class="sig-paren">(</span><em>path</em>, <em>info=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#mkdir_p"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.mkdir_p" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a directory if it doesn’t exist.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.print_data_path">
+<code class="descclassname">medaka.common.</code><code class="descname">print_data_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#print_data_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.print_data_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print data directory containing models</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.rle">
+<code class="descclassname">medaka.common.</code><code class="descname">rle</code><span class="sig-paren">(</span><em>array</em>, <em>low_mem=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#rle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.rle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate a run length encoding (rle), of an input vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>array</strong> – 1D input array.</li>
+<li><strong>low_mem</strong> – use a lower memory implementation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>returns: structured array with fields <cite>start</cite>, <cite>length</cite>, and <cite>value</cite>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.segment_limits">
+<code class="descclassname">medaka.common.</code><code class="descname">segment_limits</code><span class="sig-paren">(</span><em>start</em>, <em>end</em>, <em>segment_len=20000</em>, <em>overlap_len=1000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#segment_limits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.segment_limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate segments of a range [0, end_point].</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>start</strong> – startpoint of range.</li>
+<li><strong>end</strong> – endpoint of range.</li>
+<li><strong>segment_len</strong> – length of resultant segments.</li>
+<li><strong>overlap_len</strong> – length of overlap between segments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last">tuples (start, end) indicating overlapping segments of
+the input range.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.seq_to_hp_lens">
+<code class="descclassname">medaka.common.</code><code class="descname">seq_to_hp_lens</code><span class="sig-paren">(</span><em>seq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#seq_to_hp_lens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.seq_to_hp_lens" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return array of HP lengths for every position in the sequence</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>seq</strong> – str, sequence</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><cite>np.ndarray</cite> containing HP lengths (the same length as seq).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.sliding_window">
+<code class="descclassname">medaka.common.</code><code class="descname">sliding_window</code><span class="sig-paren">(</span><em>a</em>, <em>window=3</em>, <em>step=1</em>, <em>axis=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#sliding_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.sliding_window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sliding window across an array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>a</strong> – input array.</li>
+<li><strong>window</strong> – window length.</li>
+<li><strong>step</strong> – step length between consecutive windows.</li>
+<li><strong>axis</strong> – axis over which to apply window.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last">windows of the input array.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.threadsafe_generator">
+<code class="descclassname">medaka.common.</code><code class="descname">threadsafe_generator</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#threadsafe_generator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.threadsafe_generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator that takes a generator function and makes it
+thread-safe.</p>
+<p><a class="reference external" href="http://anandology.com/blog/using-iterators-and-generators/">http://anandology.com/blog/using-iterators-and-generators/</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.common.yield_compressed_pairs">
+<code class="descclassname">medaka.common.</code><code class="descname">yield_compressed_pairs</code><span class="sig-paren">(</span><em>aln</em>, <em>ref_rle=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/common.html#yield_compressed_pairs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.common.yield_compressed_pairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield ComprAlignPos objects for aligned pairs of an AlignedSegment.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>aln</strong> – pysam AlignedSegment.</li>
+<li><strong>ref_rle</strong> – structured array with columns ‘start’ and ‘length’ encoding ref.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><cite>ComprAlignPos</cite> objects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medaka.datastore">
+<span id="medaka-datastore-module"></span><h2>medaka.datastore module<a class="headerlink" href="#module-medaka.datastore" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medaka.datastore.DataIndex">
+<em class="property">class </em><code class="descclassname">medaka.datastore.</code><code class="descname">DataIndex</code><span class="sig-paren">(</span><em>filenames</em>, <em>threads=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/datastore.html#DataIndex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.datastore.DataIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to index and serve samples from one or more <cite>DataFiles</cite></p>
+<dl class="attribute">
+<dt id="medaka.datastore.DataIndex.index">
+<code class="descname">index</code><a class="headerlink" href="#medaka.datastore.DataIndex.index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.datastore.DataIndex.yield_from_feature_files">
+<code class="descname">yield_from_feature_files</code><span class="sig-paren">(</span><em>ref_names=None</em>, <em>samples=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/datastore.html#DataIndex.yield_from_feature_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.datastore.DataIndex.yield_from_feature_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield <cite>medaka.common.Sample</cite> objects from one or more feature files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Ref_names:</th><td class="field-body">iterable of str, only process these references.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Samples:</th><td class="field-body">iterable of sample names to yield (in order in which they are supplied).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Yields:</th><td class="field-body"><cite>medaka.common.Sample</cite> objects.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.datastore.DataStore">
+<em class="property">class </em><code class="descclassname">medaka.datastore.</code><code class="descname">DataStore</code><span class="sig-paren">(</span><em>filename</em>, <em>mode='r'</em>, <em>verify_on_close=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/datastore.html#DataStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.datastore.DataStore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to read/write to a data file</p>
+<dl class="method">
+<dt id="medaka.datastore.DataStore.load_sample">
+<code class="descname">load_sample</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/datastore.html#DataStore.load_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.datastore.DataStore.load_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load <cite>medaka.common.Sample</cite> object from HDF5</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> – str, sample name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><cite>medaka.common.Sample</cite> object.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.datastore.DataStore.log_counts">
+<code class="descname">log_counts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/datastore.html#DataStore.log_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.datastore.DataStore.log_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log label counts</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.datastore.DataStore.meta">
+<code class="descname">meta</code><a class="headerlink" href="#medaka.datastore.DataStore.meta" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.datastore.DataStore.n_samples">
+<code class="descname">n_samples</code><a class="headerlink" href="#medaka.datastore.DataStore.n_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return number of samples</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.datastore.DataStore.sample_keys">
+<code class="descname">sample_keys</code><a class="headerlink" href="#medaka.datastore.DataStore.sample_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return tuple of sample keys</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.datastore.DataStore.update_meta">
+<code class="descname">update_meta</code><span class="sig-paren">(</span><em>meta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/datastore.html#DataStore.update_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.datastore.DataStore.update_meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update metadata</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.datastore.DataStore.write_sample">
+<code class="descname">write_sample</code><span class="sig-paren">(</span><em>sample</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/datastore.html#DataStore.write_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.datastore.DataStore.write_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write sample to hdf, ensuring a sample is not written twice and maintaining
+a count of labels seen.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sample</strong> – <cite>medaka.common.Sample</cite> object.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-medaka.features">
+<span id="medaka-features-module"></span><h2>medaka.features module<a class="headerlink" href="#module-medaka.features" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medaka.features.FeatureEncoder">
+<em class="property">class </em><code class="descclassname">medaka.features.</code><code class="descname">FeatureEncoder</code><span class="sig-paren">(</span><em>ref_mode: str = None</em>, <em>max_hp_len: int = 10</em>, <em>log_min: int = None</em>, <em>normalise: str = 'total'</em>, <em>with_depth: bool = False</em>, <em>consensus_as_ref: bool = False</em>, <em>is_compressed: bool = True</em>, <em>dtypes=(''</em>, <em>)</em>, <em>tag_name=None</em>, <em>tag_value=None</em>, <em>tag_keep_missing=False</em>, <em>sym_indels=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#FeatureEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.FeatureEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="medaka.features.FeatureEncoder.bam_to_sample">
+<code class="descname">bam_to_sample</code><span class="sig-paren">(</span><em>reads_bam</em>, <em>region</em>, <em>reference=None</em>, <em>read_fraction=None</em>, <em>force_py=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#FeatureEncoder.bam_to_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.FeatureEncoder.bam_to_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a section of an alignment pileup (as shown
+by e.g. samtools tview) to a base frequency feature array</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>reads_bam</strong> – (sorted indexed) bam with read alignment to reference</li>
+<li><strong>region</strong> – <cite>medaka.common.Region</cite> object with ref_name, start and end attributes.</li>
+<li><strong>reference</strong> – reference <cite>.fasta</cite>, should correspond to <cite>bam</cite>.
+Required only for run length encoded references and reads.</li>
+<li><strong>read_fraction</strong> – fraction of reads to use, if <cite>None</cite> use all.</li>
+<li><strong>force_py</strong> – bool, if True, force use of python code (rather than c library).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">iterable of <cite>medaka.common.Sample</cite> objects</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.features.FeatureEncoder.bam_to_sample_c">
+<code class="descname">bam_to_sample_c</code><span class="sig-paren">(</span><em>reads_bam</em>, <em>region</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#FeatureEncoder.bam_to_sample_c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.FeatureEncoder.bam_to_sample_c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a section of an alignment pileup (as shown
+by e.g. samtools tview) to a base frequency feature array</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>reads_bam</strong> – (sorted indexed) bam with read alignment to reference</li>
+<li><strong>region</strong> – <cite>medaka.common.Region</cite> object with ref_name, start and end attributes.</li>
+<li><strong>start</strong> – starting position within reference</li>
+<li><strong>end</strong> – ending position within reference</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><cite>medaka.common.Sample</cite> object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.features.FeatureEncoder.bams_to_training_samples">
+<code class="descname">bams_to_training_samples</code><span class="sig-paren">(</span><em>truth_bam</em>, <em>bam</em>, <em>region</em>, <em>reference=None</em>, <em>read_fraction=None</em>, <em>truth_haplotag=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#FeatureEncoder.bams_to_training_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.FeatureEncoder.bams_to_training_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare training data chunks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>truth_bam</strong> – .bam file of truth aligned to ref to generate labels.</li>
+<li><strong>bam</strong> – input .bam file.</li>
+<li><strong>region</strong> – <cite>medaka.common.Region</cite> obj.
+the reference will be parsed.</li>
+<li><strong>reference</strong> – reference <cite>.fasta</cite>, should correspond to <cite>bam</cite>.</li>
+<li><strong>read_fraction</strong> – fraction of reads to use, if <cite>None</cite> use all.</li>
+<li><strong>truth_haplotag</strong> – two letter tag name used for grouping truth labels by haplotype.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple of <cite>medaka.common.Sample</cite> objects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Chunks might be missing if <cite>truth_bam</cite> is provided and
+regions with multiple mappings were encountered.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.features.FeatureEncoder.feature_indices">
+<code class="descname">feature_indices</code><a class="headerlink" href="#medaka.features.FeatureEncoder.feature_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Location of feature vector components.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">dictionary mapping read data type and strand to feature vector
+indices (a list over all bases)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.features.FeatureEncoder.process_ref_seq">
+<code class="descname">process_ref_seq</code><span class="sig-paren">(</span><em>ref_name</em>, <em>ref_fq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#FeatureEncoder.process_ref_seq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.FeatureEncoder.process_ref_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translate a sequence to RLE or truncated homopolymer form if required.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ref_name</strong> – str, name of contig within <cite>ref_fq</cite>.</li>
+<li><strong>ref_fq</strong> – path to reference fastq, or <cite>SeqIO.index</cite> obj.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.features.SampleGenerator">
+<em class="property">class </em><code class="descclassname">medaka.features.</code><code class="descname">SampleGenerator</code><span class="sig-paren">(</span><em>bam</em>, <em>region</em>, <em>model</em>, <em>rle_ref=None</em>, <em>truth_bam=None</em>, <em>truth_haplotag=None</em>, <em>read_fraction=None</em>, <em>chunk_len=1000</em>, <em>chunk_overlap=200</em>, <em>tag_name=None</em>, <em>tag_value=None</em>, <em>tag_keep_missing=False</em>, <em>enable_chunking=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#SampleGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.SampleGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="medaka.features.SampleGenerator.samples">
+<code class="descname">samples</code><a class="headerlink" href="#medaka.features.SampleGenerator.samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterator over chunked samples.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.features.alphabet_filter">
+<code class="descclassname">medaka.features.</code><code class="descname">alphabet_filter</code><span class="sig-paren">(</span><em>sample_gen</em>, <em>alphabet=None</em>, <em>filter_labels=True</em>, <em>filter_ref_seq=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#alphabet_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.alphabet_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Skip chunks in which labels and/or ref_seq contain bases not in <cite>alphabet</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sample_gen</strong> – generator of <cite>medaka.common.Sample</cite> named tuples.</li>
+<li><strong>alphabet</strong> – set of str of allowed bases. If None, automatically generated from decoding.</li>
+<li><strong>filter_labels</strong> – bool, whether to filter on labels.</li>
+<li><strong>filter_ref_seq</strong> – bool, whether to filter on ref_seq.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><cite>medaka.common.Sample</cite> named tuples.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.features.compress">
+<code class="descclassname">medaka.features.</code><code class="descname">compress</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#compress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.compress" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.features.compress_seq">
+<code class="descclassname">medaka.features.</code><code class="descname">compress_seq</code><span class="sig-paren">(</span><em>read</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#compress_seq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.compress_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compress homopolymers within a basecall, encoding their lengths in qscores.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>read</strong> – <cite>Bio.SeqRecord.SeqRecord</cite> object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(str read.description,
+str compressed sequence,
+str qscores,
+structured array with fields <cite>start</cite>, <cite>length</cite>, and <cite>value</cite>).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.features.create_labelled_samples">
+<code class="descclassname">medaka.features.</code><code class="descname">create_labelled_samples</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#create_labelled_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.create_labelled_samples" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.features.create_samples">
+<code class="descclassname">medaka.features.</code><code class="descname">create_samples</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#create_samples"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.create_samples" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.features.get_runs_from_fastq">
+<code class="descclassname">medaka.features.</code><code class="descname">get_runs_from_fastq</code><span class="sig-paren">(</span><em>fastq</em>, <em>ref_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#get_runs_from_fastq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.get_runs_from_fastq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get run length encoding of a read.
+:param fastq: str, path to fastq file or <cite>SeqIO.index</cite> object.
+:param ref_name: str, name of read with fastq.
+:returns: structured <cite>numpy.ndarray</cite> with dtype=[(‘start’, int), (‘length’, int)].</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.features.pileup_counts">
+<code class="descclassname">medaka.features.</code><code class="descname">pileup_counts</code><span class="sig-paren">(</span><em>region</em>, <em>bam</em>, <em>dtype_prefixes=None</em>, <em>region_split=100000</em>, <em>workers=12</em>, <em>tag_name=None</em>, <em>tag_value=None</em>, <em>keep_missing=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/features.html#pileup_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.features.pileup_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create pileup counts feature array for region.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>region</strong> – <cite>medaka.common.Region</cite> object</li>
+<li><strong>bam</strong> – .bam file with alignments.</li>
+<li><strong>dtype_prefixes</strong> – prefixes for query names which to separate counts.
+If <cite>None</cite> (or of length 1), counts are not split.</li>
+<li><strong>tag_name</strong> – two letter tag name by which to filter reads.</li>
+<li><strong>tag_value</strong> – integer value of tag for reads to keep.</li>
+<li><strong>keep_missing</strong> – whether to keep reads when tag is missing.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">pileup counts array, reference positions, insertion postions</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medaka.inference">
+<span id="medaka-inference-module"></span><h2>medaka.inference module<a class="headerlink" href="#module-medaka.inference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medaka.inference.TrainBatcher">
+<em class="property">class </em><code class="descclassname">medaka.inference.</code><code class="descname">TrainBatcher</code><span class="sig-paren">(</span><em>features</em>, <em>max_label_len</em>, <em>validation=0.2</em>, <em>seed=0</em>, <em>sparse_labels=True</em>, <em>batch_size=500</em>, <em>threads=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#TrainBatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.TrainBatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="medaka.inference.TrainBatcher.sample_to_x_y">
+<code class="descname">sample_to_x_y</code><span class="sig-paren">(</span><em>sample</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#TrainBatcher.sample_to_x_y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.TrainBatcher.sample_to_x_y" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a <cite>medaka.common.Sample</cite> object into an x,y tuple for training.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sample</strong> – (filename, sample key)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(np.ndarray of inputs, np.ndarray of labels)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="medaka.inference.TrainBatcher.sample_to_x_y_bq_worker">
+<em class="property">static </em><code class="descname">sample_to_x_y_bq_worker</code><span class="sig-paren">(</span><em>sample</em>, <em>max_label_len</em>, <em>label_encoding</em>, <em>sparse_labels</em>, <em>n_classes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#TrainBatcher.sample_to_x_y_bq_worker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.TrainBatcher.sample_to_x_y_bq_worker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a <cite>medaka.common.Sample</cite> object into an x,y tuple for training.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sample</strong> – (filename, sample key)</li>
+<li><strong>max_label_len</strong> – int, maximum label length, longer labels will be truncated.</li>
+<li><strong>label_encoding</strong> – {label: int encoded label}.</li>
+<li><strong>sparse_labels</strong> – bool, create sparse labels.</li>
+<li><strong>n_classes</strong> – int, number of label classes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">(np.ndarray of inputs, np.ndarray of labels)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.inference.TrainBatcher.samples_to_batch">
+<code class="descname">samples_to_batch</code><span class="sig-paren">(</span><em>samples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#TrainBatcher.samples_to_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.TrainBatcher.samples_to_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a set of <cite>medaka.common.Sample</cite> objects into an X, Y tuple for training.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>samples</strong> – (filename, sample key) tuples</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(np.ndarray of inputs, np.ndarray of labels)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.inference.cat_acc">
+<code class="descclassname">medaka.inference.</code><code class="descname">cat_acc</code><span class="sig-paren">(</span><em>y_true</em>, <em>y_pred</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#cat_acc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.cat_acc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.inference.predict">
+<code class="descclassname">medaka.inference.</code><code class="descname">predict</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inference program.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.inference.process_labels">
+<code class="descclassname">medaka.inference.</code><code class="descname">process_labels</code><span class="sig-paren">(</span><em>label_counts</em>, <em>max_label_len=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#process_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.process_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create map from full labels to (encoded) truncated labels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>label_counts</strong> – <cite>Counter</cite> obj of label counts.</li>
+<li><strong>max_label_len</strong> – int, maximum label length, longer labels will be truncated.</li>
+<li><strong>label_encoding</strong> – {label: int encoded label}.</li>
+<li><strong>sparse_labels</strong> – bool, create sparse labels.</li>
+<li><strong>n_classes</strong> – int, number of label classes.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">({label: int encoding}, [label decodings], <cite>Counter</cite> of truncated counts).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.inference.qscore">
+<code class="descclassname">medaka.inference.</code><code class="descname">qscore</code><span class="sig-paren">(</span><em>y_true</em>, <em>y_pred</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#qscore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.qscore" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.inference.run_prediction">
+<code class="descclassname">medaka.inference.</code><code class="descname">run_prediction</code><span class="sig-paren">(</span><em>output</em>, <em>bam</em>, <em>regions</em>, <em>model</em>, <em>model_file</em>, <em>rle_ref</em>, <em>read_fraction</em>, <em>chunk_len</em>, <em>chunk_ovlp</em>, <em>batch_size=200</em>, <em>save_features=False</em>, <em>tag_name=None</em>, <em>tag_value=None</em>, <em>tag_keep_missing=False</em>, <em>enable_chunking=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#run_prediction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.run_prediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inference worker.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.inference.run_training">
+<code class="descclassname">medaka.inference.</code><code class="descname">run_training</code><span class="sig-paren">(</span><em>train_name</em>, <em>batcher</em>, <em>model_fp=None</em>, <em>epochs=5000</em>, <em>class_weight=None</em>, <em>n_mini_epochs=1</em>, <em>threads_io=1</em>, <em>multi_label=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#run_training"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.run_training" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run training.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.inference.train">
+<code class="descclassname">medaka.inference.</code><code class="descname">train</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Training program.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.inference.weighted_categorical_crossentropy">
+<code class="descclassname">medaka.inference.</code><code class="descname">weighted_categorical_crossentropy</code><span class="sig-paren">(</span><em>weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/inference.html#weighted_categorical_crossentropy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.inference.weighted_categorical_crossentropy" title="Permalink to this definition">¶</a></dt>
+<dd><p>A weighted version of keras.objectives.categorical_crossentropy
+&#64;url: <a class="reference external" href="https://gist.github.com/wassname/ce364fddfc8a025bfab4348cf5de852d">https://gist.github.com/wassname/ce364fddfc8a025bfab4348cf5de852d</a>
+&#64;author: wassname</p>
+<dl class="docutils">
+<dt>Variables:</dt>
+<dd>weights: numpy array of shape (C,) where C is the number of classes</dd>
+<dt>Usage:</dt>
+<dd>weights = np.array([0.5,2,10]) # Class one at 0.5, class 2 twice the normal weights, class 3 10x.
+loss = weighted_categorical_crossentropy(weights)
+model.compile(loss=loss,optimizer=’adam’)</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medaka.keras_ext">
+<span id="medaka-keras-ext-module"></span><h2>medaka.keras_ext module<a class="headerlink" href="#module-medaka.keras_ext" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medaka.keras_ext.BatchQueue">
+<em class="property">class </em><code class="descclassname">medaka.keras_ext.</code><code class="descname">BatchQueue</code><span class="sig-paren">(</span><em>samples</em>, <em>prep_func</em>, <em>batch_size</em>, <em>executor</em>, <em>seed=None</em>, <em>name='Train'</em>, <em>maxsize=100</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/keras_ext.html#BatchQueue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.keras_ext.BatchQueue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="staticmethod">
+<dt id="medaka.keras_ext.BatchQueue.samples_to_batch">
+<em class="property">static </em><code class="descname">samples_to_batch</code><span class="sig-paren">(</span><em>samples</em>, <em>prep_func</em>, <em>name</em>, <em>batch</em>, <em>epoch</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/keras_ext.html#BatchQueue.samples_to_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.keras_ext.BatchQueue.samples_to_batch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.keras_ext.BatchQueue.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><em>timeout=5</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/keras_ext.html#BatchQueue.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.keras_ext.BatchQueue.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.keras_ext.BatchQueue.yield_batches">
+<code class="descname">yield_batches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/keras_ext.html#BatchQueue.yield_batches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.keras_ext.BatchQueue.yield_batches" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.keras_ext.ModelMetaCheckpoint">
+<em class="property">class </em><code class="descclassname">medaka.keras_ext.</code><code class="descname">ModelMetaCheckpoint</code><span class="sig-paren">(</span><em>medaka_meta</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/keras_ext.html#ModelMetaCheckpoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.keras_ext.ModelMetaCheckpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tensorflow.python.keras.callbacks.ModelCheckpoint</span></code></p>
+<p>Custom ModelCheckpoint to add medaka-specific metadata to model files</p>
+<dl class="method">
+<dt id="medaka.keras_ext.ModelMetaCheckpoint.on_epoch_end">
+<code class="descname">on_epoch_end</code><span class="sig-paren">(</span><em>epoch</em>, <em>logs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/keras_ext.html#ModelMetaCheckpoint.on_epoch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.keras_ext.ModelMetaCheckpoint.on_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called at the end of an epoch.</p>
+<p>Subclasses should override for any actions to run. This function should only
+be called during TRAIN mode.</p>
+<dl class="docutils">
+<dt>Arguments:</dt>
+<dd><p class="first">epoch: integer, index of epoch.
+logs: dict, metric results for this training epoch, and for the</p>
+<blockquote class="last">
+<div>validation epoch if validation is performed. Validation result keys
+are prefixed with <cite>val_</cite>.</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.keras_ext.SequenceBatcher">
+<em class="property">class </em><code class="descclassname">medaka.keras_ext.</code><code class="descname">SequenceBatcher</code><span class="sig-paren">(</span><em>batcher</em>, <em>dataset='train'</em>, <em>mini_epochs=1</em>, <em>seed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/keras_ext.html#SequenceBatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.keras_ext.SequenceBatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tensorflow.python.keras.utils.data_utils.Sequence</span></code></p>
+<dl class="method">
+<dt id="medaka.keras_ext.SequenceBatcher.on_epoch_end">
+<code class="descname">on_epoch_end</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/keras_ext.html#SequenceBatcher.on_epoch_end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.keras_ext.SequenceBatcher.on_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method called at the end of every epoch.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-medaka.labels">
+<span id="medaka-labels-module"></span><h2>medaka.labels module<a class="headerlink" href="#module-medaka.labels" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medaka.labels.TruthAlignment">
+<em class="property">class </em><code class="descclassname">medaka.labels.</code><code class="descname">TruthAlignment</code><span class="sig-paren">(</span><em>alignment</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/labels.html#TruthAlignment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.labels.TruthAlignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="staticmethod">
+<dt id="medaka.labels.TruthAlignment.bam_to_alignments">
+<em class="property">static </em><code class="descname">bam_to_alignments</code><span class="sig-paren">(</span><em>truth_bam</em>, <em>region</em>, <em>haplotag=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/labels.html#TruthAlignment.bam_to_alignments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.labels.TruthAlignment.bam_to_alignments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get processed truth alignments</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>truth_bam</strong> – (sorted indexed) bam with true sequence aligned to reference</li>
+<li><strong>region</strong> – <cite>medaka.common.Region</cite> obj,
+(all alignments with any overlap with the interval start:end will be retrieved)</li>
+<li><strong>haplotag</strong> – bam tag specifying which haplotype the alignment belongs to (for multi-ploidy labels)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list of tuples where each tuple contains <cite>TruthAlignment</cite> objs
+for each haplotype trimmed to common genomic window.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="medaka.labels.TruthAlignment.get_positions_and_labels">
+<em class="property">static </em><code class="descname">get_positions_and_labels</code><span class="sig-paren">(</span><em>h_algns</em>, <em>aln_to_pairs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/labels.html#TruthAlignment.get_positions_and_labels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.labels.TruthAlignment.get_positions_and_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create labels and positions array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>h_algns</strong> – tuple of alignments for each haplotype spanning the same genomic range.</li>
+<li><strong>aln_to_pairs</strong> – callable, that gets aligned pairs from an <cite>AlignedSegment</cite> obj.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>tuple(positions, encoded_label_array)</p>
+<ul class="simple">
+<li>positions: numpy structured array with ‘ref_major’
+(reference position index) and ‘ref_minor’
+(trailing insertion index) fields.</li>
+<li><dl class="first docutils">
+<dt>encoded_label_array: numpy array, with shape (pos, ploidy) and</dt>
+<dd>dtype [(‘base, int), (‘run_length’, int)]</dd>
+</dl>
+</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-medaka.medaka">
+<span id="medaka-medaka-module"></span><h2>medaka.medaka module<a class="headerlink" href="#module-medaka.medaka" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medaka.medaka.CheckBam">
+<em class="property">class </em><code class="descclassname">medaka.medaka.</code><code class="descname">CheckBam</code><span class="sig-paren">(</span><em>option_strings</em>, <em>dest</em>, <em>nargs=None</em>, <em>const=None</em>, <em>default=None</em>, <em>type=None</em>, <em>choices=None</em>, <em>required=False</em>, <em>help=None</em>, <em>metavar=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/medaka.html#CheckBam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.medaka.CheckBam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">argparse.Action</span></code></p>
+<p>Check a bam has &lt; 2 samples (RG tag)</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.medaka.ResolveModel">
+<em class="property">class </em><code class="descclassname">medaka.medaka.</code><code class="descname">ResolveModel</code><span class="sig-paren">(</span><em>option_strings</em>, <em>dest</em>, <em>default=None</em>, <em>required=False</em>, <em>help='Model file.'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/medaka.html#ResolveModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.medaka.ResolveModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">argparse.Action</span></code></p>
+<p>Resolve model filename or ID into filename</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.medaka.feature_gen_dispatch">
+<code class="descclassname">medaka.medaka.</code><code class="descname">feature_gen_dispatch</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/medaka.html#feature_gen_dispatch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.medaka.feature_gen_dispatch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.medaka.hdf2yaml">
+<code class="descclassname">medaka.medaka.</code><code class="descname">hdf2yaml</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/medaka.html#hdf2yaml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.medaka.hdf2yaml" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.medaka.main">
+<code class="descclassname">medaka.medaka.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/medaka.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.medaka.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.medaka.print_all_models">
+<code class="descclassname">medaka.medaka.</code><code class="descname">print_all_models</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/medaka.html#print_all_models"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.medaka.print_all_models" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.medaka.print_model_path">
+<code class="descclassname">medaka.medaka.</code><code class="descname">print_model_path</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/medaka.html#print_model_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.medaka.print_model_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.medaka.yaml2hdf">
+<code class="descclassname">medaka.medaka.</code><code class="descname">yaml2hdf</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/medaka.html#yaml2hdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.medaka.yaml2hdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-medaka.medaka_counts">
+<span id="medaka-medaka-counts-module"></span><h2>medaka.medaka_counts module<a class="headerlink" href="#module-medaka.medaka_counts" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="medaka.medaka_counts.main">
+<code class="descclassname">medaka.medaka_counts.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/medaka_counts.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.medaka_counts.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-medaka.models">
+<span id="medaka-models-module"></span><h2>medaka.models module<a class="headerlink" href="#module-medaka.models" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="medaka.models.build_legacy_model">
+<code class="descclassname">medaka.models.</code><code class="descname">build_legacy_model</code><span class="sig-paren">(</span><em>chunk_size</em>, <em>feature_len</em>, <em>num_classes</em>, <em>gru_size=128</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/models.html#build_legacy_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.models.build_legacy_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a bidirectional GRU model
+:param chunk_size: int, number of pileup columns in a sample.
+:param feature_len: int, number of features for each pileup column.
+:param num_classes: int, number of output class labels.
+:param gru_size: int, size of each GRU layer.
+:returns: <cite>keras.models.Sequential</cite> object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.models.build_model">
+<code class="descclassname">medaka.models.</code><code class="descname">build_model</code><span class="sig-paren">(</span><em>chunk_size</em>, <em>feature_len</em>, <em>num_classes</em>, <em>gru_size=128</em>, <em>classify_activation='softmax'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/models.html#build_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.models.build_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a bidirectional GRU model. Uses CuDNNGRU for additional
+speed-up on GPU (claimed 7x).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>chunk_size</strong> – int, number of pileup columns in a sample.</li>
+<li><strong>feature_len</strong> – int, number of features for each pileup column.</li>
+<li><strong>num_classes</strong> – int, number of output class labels.</li>
+<li><strong>gru_size</strong> – int, size of each GRU layer.</li>
+<li><strong>classify_activation</strong> – str, activation to use in classification layer.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><cite>keras.models.Sequential</cite> object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.models.load_model">
+<code class="descclassname">medaka.models.</code><code class="descname">load_model</code><span class="sig-paren">(</span><em>fname</em>, <em>time_steps=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/models.html#load_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.models.load_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a model from an .hdf file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fname</strong> – .hdf file containing model.</li>
+<li><strong>time_steps</strong> – number of time points in RNN, <cite>None</cite> for dynamic.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>..note:: keras’ <cite>load_model</cite> cannot handle CuDNNGRU layers, hence this</dt>
+<dd>function builds the model then loads the weights.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medaka.stitch">
+<span id="medaka-stitch-module"></span><h2>medaka.stitch module<a class="headerlink" href="#module-medaka.stitch" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="medaka.stitch.stitch">
+<code class="descclassname">medaka.stitch.</code><code class="descname">stitch</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/stitch.html#stitch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.stitch.stitch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.stitch.stitch_from_probs">
+<code class="descclassname">medaka.stitch.</code><code class="descname">stitch_from_probs</code><span class="sig-paren">(</span><em>probs_hdfs</em>, <em>regions=None</em>, <em>model_yml=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/stitch.html#stitch_from_probs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.stitch.stitch_from_probs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode and join overlapping label probabilities from hdf to assemble complete sequence</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>probs_hdfs</strong> – iterable of hdf filepaths.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Ref_names:</th><td class="field-body">iterable of ref_names to limit stitching to.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list of (contig_name, sequence)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.stitch.write_fasta">
+<code class="descclassname">medaka.stitch.</code><code class="descname">write_fasta</code><span class="sig-paren">(</span><em>filename</em>, <em>contigs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/stitch.html#write_fasta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.stitch.write_fasta" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-medaka.variant">
+<span id="medaka-variant-module"></span><h2>medaka.variant module<a class="headerlink" href="#module-medaka.variant" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medaka.variant.DecoderRegistrar">
+<em class="property">class </em><code class="descclassname">medaka.variant.</code><code class="descname">DecoderRegistrar</code><a class="reference internal" href="_modules/medaka/variant.html#DecoderRegistrar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.variant.DecoderRegistrar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></p>
+<p>metaclass for registering variant decoders.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.variant.HaploidVariantDecoder">
+<em class="property">class </em><code class="descclassname">medaka.variant.</code><code class="descname">HaploidVariantDecoder</code><span class="sig-paren">(</span><em>meta</em>, <em>threshold=0.04</em>, <em>ref_vcf=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/variant.html#HaploidVariantDecoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.variant.HaploidVariantDecoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#medaka.variant.SNPDecoder" title="medaka.variant.SNPDecoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">medaka.variant.SNPDecoder</span></code></a></p>
+<p>Class to decode haploid variants (snps and indels).</p>
+<dl class="method">
+<dt id="medaka.variant.HaploidVariantDecoder.decode_variants">
+<code class="descname">decode_variants</code><span class="sig-paren">(</span><em>samples</em>, <em>ref_seq</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/variant.html#HaploidVariantDecoder.decode_variants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.variant.HaploidVariantDecoder.decode_variants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode haploid variants.</p>
+<p>Multi-base or otherwise complex variants will be decoded in their entirety.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>samples</strong> – stream of <cite>medaka.common.Sample</cite> objects for a given contig.</li>
+<li><strong>ref_seq</strong> – reference sequence.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">sorted list of <cite>medaka.vcf.Variant</cite> objects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.variant.HaploidVariantDecoder.meta_info">
+<code class="descname">meta_info</code><a class="headerlink" href="#medaka.variant.HaploidVariantDecoder.meta_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.variant.SNPDecoder">
+<em class="property">class </em><code class="descclassname">medaka.variant.</code><code class="descname">SNPDecoder</code><span class="sig-paren">(</span><em>meta</em>, <em>threshold=0.04</em>, <em>ref_vcf=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/variant.html#SNPDecoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.variant.SNPDecoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to decode diploid SNPs and deletions using a threshold</p>
+<dl class="method">
+<dt id="medaka.variant.SNPDecoder.decode_variants">
+<code class="descname">decode_variants</code><span class="sig-paren">(</span><em>samples</em>, <em>ref_seq</em>, <em>threshold=0.04</em>, <em>multi_label=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/variant.html#SNPDecoder.decode_variants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.variant.SNPDecoder.decode_variants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode SNPs using a threshold.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>samples</strong> – stream of <cite>medaka.common.Sample</cite> objects for a given contig.</li>
+<li><strong>ref_seq</strong> – reference sequence.</li>
+<li><strong>threshold</strong> – threshold below which a secondary call (which would make
+for a heterozygous call) is deemed insignificant.</li>
+<li><strong>multi_label</strong> – Use this option if the model was trained with the multi_label option
+meaning that label probabilities are independent and do not sum up to 1.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">sorted list of <cite>medaka.vcf.Variant</cite> objects.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.variant.SNPDecoder.meta_info">
+<code class="descname">meta_info</code><a class="headerlink" href="#medaka.variant.SNPDecoder.meta_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.variant.join_chunked_variants">
+<code class="descclassname">medaka.variant.</code><code class="descname">join_chunked_variants</code><span class="sig-paren">(</span><em>gen</em>, <em>ref_seq_encoded</em>, <em>gap_encoded</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/variant.html#join_chunked_variants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.variant.join_chunked_variants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process stream of trimmed consensus chunks ensuring a variant is
+not split accross multiple chunks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gen</strong> – stream of (<cite>medaka.common.Sample</cite> obj, bool is_last_in_contig)</li>
+<li><strong>ref_seq_encoded</strong> – <cite>np.ndarray</cite> of the ref sequence (i.e. only major positions) encoded as medaka labels.</li>
+<li><strong>gap_encoded</strong> – int, encoding of gaps.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><cite>medaka.common.Sample</cite></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.variant.parse_regions">
+<code class="descclassname">medaka.variant.</code><code class="descname">parse_regions</code><span class="sig-paren">(</span><em>regions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/variant.html#parse_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.variant.parse_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse region strings, returning a list of ref_names.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>regions</strong> – iterable of region strings.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple of str of ref_names.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.variant.register_variant_decoder">
+<code class="descclassname">medaka.variant.</code><code class="descname">register_variant_decoder</code><span class="sig-paren">(</span><em>clsname</em>, <em>cls</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/variant.html#register_variant_decoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.variant.register_variant_decoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a variant decoder.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.variant.variants_from_hdf">
+<code class="descclassname">medaka.variant.</code><code class="descname">variants_from_hdf</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/variant.html#variants_from_hdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.variant.variants_from_hdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entry point for variant calling from hdf consensus probability files.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.variant.yield_trimmed_consensus_chunks">
+<code class="descclassname">medaka.variant.</code><code class="descname">yield_trimmed_consensus_chunks</code><span class="sig-paren">(</span><em>sample_gen</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/variant.html#yield_trimmed_consensus_chunks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.variant.yield_trimmed_consensus_chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield adjacent consensus chunks trimmed to remove overlap.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sample_gen</strong> – <cite>generator of medaka.common.Sample</cite> obj</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body">(<cite>Sample</cite>, bool is_last_in_contig)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medaka.vcf">
+<span id="medaka-vcf-module"></span><h2>medaka.vcf module<a class="headerlink" href="#module-medaka.vcf" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="medaka.vcf.Haploid2DiploidConverter">
+<em class="property">class </em><code class="descclassname">medaka.vcf.</code><code class="descname">Haploid2DiploidConverter</code><span class="sig-paren">(</span><em>vcf1</em>, <em>vcf2</em>, <em>ref_fasta</em>, <em>only_overlapping=True</em>, <em>discard_phase=True</em>, <em>detailed_info=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#Haploid2DiploidConverter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.Haploid2DiploidConverter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="medaka.vcf.Haploid2DiploidConverter.meta_info">
+<code class="descname">meta_info</code><a class="headerlink" href="#medaka.vcf.Haploid2DiploidConverter.meta_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.vcf.Haploid2DiploidConverter.variants">
+<code class="descname">variants</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#Haploid2DiploidConverter.variants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.Haploid2DiploidConverter.variants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield diploid variants.</p>
+<p>:yields <cite>medaka.vcf.Variant</cite> objs</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.vcf.MetaInfo">
+<em class="property">class </em><code class="descclassname">medaka.vcf.</code><code class="descname">MetaInfo</code><span class="sig-paren">(</span><em>group</em>, <em>id</em>, <em>number</em>, <em>typ</em>, <em>descr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#MetaInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.MetaInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.vcf.VCFReader">
+<em class="property">class </em><code class="descclassname">medaka.vcf.</code><code class="descname">VCFReader</code><span class="sig-paren">(</span><em>filename</em>, <em>cache=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#VCFReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.VCFReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="medaka.vcf.VCFReader.fetch">
+<code class="descname">fetch</code><span class="sig-paren">(</span><em>ref_name=None</em>, <em>start=None</em>, <em>end=None</em>, <em>strict=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#VCFReader.fetch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.VCFReader.fetch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield all variants spanned by a region.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ref_name</strong> – reference name (CHROM field of .vcf).</li>
+<li><strong>start</strong> – inclusive start co-ordinate (0-based).</li>
+<li><strong>end</strong> – exclusive end co-ordinate (0-based).</li>
+<li><strong>strict</strong> – if False variants overlapping the region, but not
+contained enitrely within the region are yielded also.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#medaka.vcf.Variant" title="medaka.vcf.Variant"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variant</span></code></a> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.vcf.VCFReader.index">
+<code class="descname">index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#VCFReader.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.VCFReader.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Index the input file for faster fetches.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.vcf.VCFWriter">
+<em class="property">class </em><code class="descclassname">medaka.vcf.</code><code class="descname">VCFWriter</code><span class="sig-paren">(</span><em>filename</em>, <em>mode='w'</em>, <em>header=('CHROM'</em>, <em>'POS'</em>, <em>'ID'</em>, <em>'REF'</em>, <em>'ALT'</em>, <em>'QUAL'</em>, <em>'FILTER'</em>, <em>'INFO'</em>, <em>'FORMAT'</em>, <em>'SAMPLE')</em>, <em>contigs=None</em>, <em>meta_info=None</em>, <em>version='4.1'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#VCFWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.VCFWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="medaka.vcf.VCFWriter.version_options">
+<code class="descname">version_options</code><em class="property"> = {'4.1', '4.3'}</em><a class="headerlink" href="#medaka.vcf.VCFWriter.version_options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.vcf.VCFWriter.write_variant">
+<code class="descname">write_variant</code><span class="sig-paren">(</span><em>variant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#VCFWriter.write_variant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.VCFWriter.write_variant" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.vcf.VCFWriter.write_variants">
+<code class="descname">write_variants</code><span class="sig-paren">(</span><em>variants</em>, <em>sort=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#VCFWriter.write_variants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.VCFWriter.write_variants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write variants to file, optionally sorting before writing.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="medaka.vcf.Variant">
+<em class="property">class </em><code class="descclassname">medaka.vcf.</code><code class="descname">Variant</code><span class="sig-paren">(</span><em>chrom</em>, <em>pos</em>, <em>ref</em>, <em>alt='.'</em>, <em>id='.'</em>, <em>qual='.'</em>, <em>filter='.'</em>, <em>info='.'</em>, <em>sample_dict=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#Variant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.Variant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="medaka.vcf.Variant.add_tag">
+<code class="descname">add_tag</code><span class="sig-paren">(</span><em>tag</em>, <em>value=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#Variant.add_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.Variant.add_tag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.vcf.Variant.alleles">
+<code class="descname">alleles</code><a class="headerlink" href="#medaka.vcf.Variant.alleles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.vcf.Variant.deep_copy">
+<code class="descname">deep_copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#Variant.deep_copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.Variant.deep_copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.vcf.Variant.format">
+<code class="descname">format</code><a class="headerlink" href="#medaka.vcf.Variant.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="medaka.vcf.Variant.from_text">
+<em class="property">classmethod </em><code class="descname">from_text</code><span class="sig-paren">(</span><em>line</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#Variant.from_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.Variant.from_text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.vcf.Variant.get_tag">
+<code class="descname">get_tag</code><span class="sig-paren">(</span><em>tag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#Variant.get_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.Variant.get_tag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.vcf.Variant.gt">
+<code class="descname">gt</code><a class="headerlink" href="#medaka.vcf.Variant.gt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.vcf.Variant.info_string">
+<code class="descname">info_string</code><a class="headerlink" href="#medaka.vcf.Variant.info_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="medaka.vcf.Variant.sample">
+<code class="descname">sample</code><a class="headerlink" href="#medaka.vcf.Variant.sample" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="medaka.vcf.Variant.split_haplotypes">
+<code class="descname">split_haplotypes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#Variant.split_haplotypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.Variant.split_haplotypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split multiploid variants into list of non-ref haploid variants.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">tuple of (int haplotype number,
+<cite>medaka.vcf.Variant</cite> obj or None if the haplotype is the ref allele)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.vcf.Variant.to_dict">
+<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#Variant.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.Variant.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary representation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="medaka.vcf.Variant.trim">
+<code class="descname">trim</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#Variant.trim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.Variant.trim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return new trimmed Variant with minimal ref and alt sequence.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.vcf.classify_variant">
+<code class="descclassname">medaka.vcf.</code><code class="descname">classify_variant</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#classify_variant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.classify_variant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classify a variant.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>v</strong> – <cite>medaka.vcf.Variant</cite> obj</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">typ: str, variant classification.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.vcf.classify_variants">
+<code class="descclassname">medaka.vcf.</code><code class="descname">classify_variants</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#classify_variants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.classify_variants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entry point to classify variants and write out a new VCF for each class and class-groups.</p>
+<p>Example classifications for subsitutions are ‘snp’ and ‘mnp’, which belong to the same class-group ‘sub’.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.vcf.diploid2haploid">
+<code class="descclassname">medaka.vcf.</code><code class="descname">diploid2haploid</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#diploid2haploid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.diploid2haploid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entry point to split a diploid VCF into two haploid VCFs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.vcf.get_homozygous_regions">
+<code class="descclassname">medaka.vcf.</code><code class="descname">get_homozygous_regions</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#get_homozygous_regions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.get_homozygous_regions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entry point to find homozygous regions from an input diploid VCF.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.vcf.haploid2diploid">
+<code class="descclassname">medaka.vcf.</code><code class="descname">haploid2diploid</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#haploid2diploid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.haploid2diploid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entry point for merging two haploid vcfs into a diploid vcf</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.vcf.parse_string_to_tags">
+<code class="descclassname">medaka.vcf.</code><code class="descname">parse_string_to_tags</code><span class="sig-paren">(</span><em>string</em>, <em>splitter='</em>, <em>'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#parse_string_to_tags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.parse_string_to_tags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.vcf.parse_tags_to_string">
+<code class="descclassname">medaka.vcf.</code><code class="descname">parse_tags_to_string</code><span class="sig-paren">(</span><em>tags</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#parse_tags_to_string"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.parse_tags_to_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.vcf.self_return">
+<code class="descclassname">medaka.vcf.</code><code class="descname">self_return</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#self_return"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.self_return" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.vcf.split_variants">
+<code class="descclassname">medaka.vcf.</code><code class="descname">split_variants</code><span class="sig-paren">(</span><em>vcf_fp</em>, <em>trim=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#split_variants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.split_variants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split diploid vcf into two haploid vcfs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vcf</strong> – str, path to input vcf.</li>
+<li><strong>trim</strong> – bool, trim variants to minimal alt and ref and update pos.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple of output files written</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.vcf.vcf2tsv">
+<code class="descclassname">medaka.vcf.</code><code class="descname">vcf2tsv</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka/vcf.html#vcf2tsv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.vcf.vcf2tsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entry point to convert vcf to tsv, unpacking info and sample fields</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-medaka">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-medaka" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="medaka.check_bgzip_version">
+<code class="descclassname">medaka.</code><code class="descname">check_bgzip_version</code><span class="sig-paren">(</span><em>pos=2</em><span class="sig-paren">)</span><a class="headerlink" href="#medaka.check_bgzip_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.check_htslib_tool_version">
+<code class="descclassname">medaka.</code><code class="descname">check_htslib_tool_version</code><span class="sig-paren">(</span><em>tool</em>, <em>pos=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka.html#check_htslib_tool_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.check_htslib_tool_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.check_minimap2_version">
+<code class="descclassname">medaka.</code><code class="descname">check_minimap2_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka.html#check_minimap2_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.check_minimap2_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>get minimap2 version.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="medaka.check_samtools_version">
+<code class="descclassname">medaka.</code><code class="descname">check_samtools_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#medaka.check_samtools_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.check_tabix_version">
+<code class="descclassname">medaka.</code><code class="descname">check_tabix_version</code><span class="sig-paren">(</span><em>pos=2</em><span class="sig-paren">)</span><a class="headerlink" href="#medaka.check_tabix_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="medaka.report_binaries">
+<code class="descclassname">medaka.</code><code class="descname">report_binaries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/medaka.html#report_binaries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#medaka.report_binaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a report of versions of required programs, exits with status 1
+if a bad version is found.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="future.html" class="btn btn-neutral float-right" title="History and Future Directions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="development.html" class="btn btn-neutral float-left" title="Development" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-19, Oxford Nanopore Technologies
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

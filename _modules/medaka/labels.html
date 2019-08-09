@@ -1,0 +1,461 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>medaka.labels &mdash; Medaka 0.8.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Medaka
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../snp.html">Experimental Variant calling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../walkthrough.html">Walkthrough</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../draft_origin.html">Origin of the draft sequence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../future.html">History and Future Directions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Medaka</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../medaka.html">medaka</a> &raquo;</li>
+        
+      <li>medaka.labels</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for medaka.labels</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">intervaltree</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pysam</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">attrgetter</span>
+
+<span class="kn">import</span> <span class="nn">medaka.common</span>
+
+
+<div class="viewcode-block" id="TruthAlignment"><a class="viewcode-back" href="../../medaka.html#medaka.labels.TruthAlignment">[docs]</a><span class="k">class</span> <span class="nc">TruthAlignment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alignment</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a TruthAlignment oblist from a `pysam.libcalignedsegment.AlignedSegment` object.</span>
+
+<span class="sd">        :param alignment: `pysam.libcalignedsegment.AlignedSegment` object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aln</span> <span class="o">=</span> <span class="n">alignment</span>  <span class="c1"># so we can get positions and labels later</span>
+        <span class="c1"># initialise start and end (which might be moved)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aln</span><span class="o">.</span><span class="n">reference_start</span>  <span class="c1"># zero-based</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aln</span><span class="o">.</span><span class="n">reference_end</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_kept</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s1">&#39;TruthAlign&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_overlap_with</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;aln.reference_start&#39;</span><span class="p">))</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">aln</span><span class="o">.</span><span class="n">reference_end</span> <span class="o">&gt;</span> <span class="n">second</span><span class="o">.</span><span class="n">aln</span><span class="o">.</span><span class="n">reference_start</span>
+        <span class="k">if</span> <span class="n">overlap</span><span class="p">:</span>
+            <span class="c1"># return positions of start and end of overlapping region</span>
+            <span class="k">return</span> <span class="n">second</span><span class="o">.</span><span class="n">aln</span><span class="o">.</span><span class="n">reference_start</span><span class="p">,</span> <span class="n">first</span><span class="o">.</span><span class="n">aln</span><span class="o">.</span><span class="n">reference_end</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_filter_alignments</span><span class="p">(</span><span class="n">alignments</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">length_ratio</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">overlap_fraction</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Filter alignments to yield only segments suitable for training.</span>
+
+<span class="sd">        :param alignments: iterable of `TruthAlignment` objects.</span>
+<span class="sd">        :param region: `medaka.common.Region` obj. all alignments will be trimmed to this region.</span>
+<span class="sd">        :param min_length: int, minimum length of alignment segment.</span>
+<span class="sd">        :param length_ratio: float, in cases of overlap, ratio of longer segment / shorter segment</span>
+<span class="sd">            above which the longer segment is assumed to be more reliable.</span>
+<span class="sd">        :param overlap_fraction: float, length_ratio: float, in cases of overlap, fraction of</span>
+<span class="sd">            shorter segment overlapping with the longer segment above which the segments are</span>
+<span class="sd">            considered highly overlapping.</span>
+<span class="sd">        :returns: list of `TruthAlignment` objects</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">filtered_alignments</span> <span class="o">=</span> <span class="p">[</span><span class="n">copy</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alignments</span><span class="p">]</span>  <span class="c1"># don&#39;t want to modify original alignments</span>
+        <span class="k">for</span> <span class="n">al_i</span><span class="p">,</span> <span class="n">al_j</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="n">filtered_alignments</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">al_i</span><span class="p">,</span> <span class="n">al_j</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;aln.reference_start&#39;</span><span class="p">))</span>
+            <span class="n">overlap</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">_get_overlap_with</span><span class="p">(</span><span class="n">second</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">overlap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">ovlp_start</span><span class="p">,</span> <span class="n">ovlp_end</span> <span class="o">=</span> <span class="n">overlap</span>
+            <span class="n">shorter</span><span class="p">,</span> <span class="n">longer</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">al_i</span><span class="p">,</span> <span class="n">al_j</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;aln.reference_length&#39;</span><span class="p">))</span>
+            <span class="n">length_ratio_ij</span> <span class="o">=</span> <span class="n">longer</span><span class="o">.</span><span class="n">aln</span><span class="o">.</span><span class="n">reference_length</span> <span class="o">/</span> <span class="n">shorter</span><span class="o">.</span><span class="n">aln</span><span class="o">.</span><span class="n">reference_length</span>
+            <span class="n">overlap_fraction_ij</span> <span class="o">=</span> <span class="p">(</span><span class="n">ovlp_end</span> <span class="o">-</span> <span class="n">ovlp_start</span><span class="p">)</span> <span class="o">/</span> <span class="n">shorter</span><span class="o">.</span><span class="n">aln</span><span class="o">.</span><span class="n">reference_length</span>
+            <span class="c1"># 4 cases</span>
+            <span class="k">if</span> <span class="n">length_ratio_ij</span> <span class="o">&lt;</span> <span class="n">length_ratio</span><span class="p">:</span>  <span class="c1"># we don&#39;t trust one more than the other</span>
+                <span class="k">if</span> <span class="n">overlap_fraction_ij</span> <span class="o">&gt;=</span> <span class="n">overlap_fraction</span><span class="p">:</span>
+                    <span class="c1"># 1) they overlap a lot; we have significant ambiguity, discard both</span>
+                    <span class="n">shorter</span><span class="o">.</span><span class="n">is_kept</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">longer</span><span class="o">.</span><span class="n">is_kept</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># 2) they overlap a little; just trim overlapping portions of both alignments</span>
+                    <span class="n">first</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="n">ovlp_start</span>
+                    <span class="n">second</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">ovlp_end</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># we trust the longer one more than the shorter one</span>
+                <span class="k">if</span> <span class="n">overlap_fraction_ij</span> <span class="o">&gt;=</span> <span class="n">overlap_fraction</span><span class="p">:</span>
+                    <span class="c1"># 3) they overlap a lot; discard shorter alignment</span>
+                    <span class="n">shorter</span><span class="o">.</span><span class="n">is_kept</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># 4) they overlap a little; trim overlapping portion of shorter alignment</span>
+                    <span class="n">second</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">ovlp_end</span>
+
+        <span class="c1"># trim starts and ends if needed</span>
+        <span class="k">if</span> <span class="n">region</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">region</span><span class="o">.</span><span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">al</span> <span class="ow">in</span> <span class="n">filtered_alignments</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">region</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">al</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">al</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">region</span><span class="o">.</span><span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">al</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">region</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">al</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+        <span class="c1"># do filtering</span>
+        <span class="n">filtered_alignments</span> <span class="o">=</span> <span class="p">[</span><span class="n">al</span> <span class="k">for</span> <span class="n">al</span> <span class="ow">in</span> <span class="n">filtered_alignments</span>
+                               <span class="k">if</span> <span class="p">(</span><span class="n">al</span><span class="o">.</span><span class="n">is_kept</span> <span class="ow">and</span> <span class="n">al</span><span class="o">.</span><span class="n">end</span> <span class="o">-</span> <span class="n">al</span><span class="o">.</span><span class="n">start</span> <span class="o">&gt;=</span> <span class="n">min_length</span><span class="p">)]</span>
+        <span class="n">filtered_alignments</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">filtered_alignments</span>
+
+
+<div class="viewcode-block" id="TruthAlignment.bam_to_alignments"><a class="viewcode-back" href="../../medaka.html#medaka.labels.TruthAlignment.bam_to_alignments">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">bam_to_alignments</span><span class="p">(</span><span class="n">truth_bam</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">haplotag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get processed truth alignments</span>
+
+<span class="sd">        :param truth_bam: (sorted indexed) bam with true sequence aligned to reference</span>
+<span class="sd">        :param region: `medaka.common.Region` obj,</span>
+<span class="sd">            (all alignments with any overlap with the interval start:end will be retrieved)</span>
+<span class="sd">        :param haplotag: bam tag specifying which haplotype the alignment belongs to (for multi-ploidy labels)</span>
+<span class="sd">        :returns: list of tuples where each tuple contains `TruthAlignment` objs</span>
+<span class="sd">            for each haplotype trimmed to common genomic window.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">algns</span> <span class="o">=</span> <span class="n">TruthAlignment</span><span class="o">.</span><span class="n">_load_alignments</span><span class="p">(</span><span class="n">truth_bam</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">haplotag</span><span class="p">)</span>
+        <span class="c1"># filter truth alignments to restrict ourselves to regions of the ref where the truth</span>
+        <span class="c1"># in unambiguous in each haplotype</span>
+        <span class="n">algns</span> <span class="o">=</span> <span class="p">{</span><span class="n">h</span><span class="p">:</span> <span class="n">TruthAlignment</span><span class="o">.</span><span class="n">_filter_alignments</span><span class="p">(</span><span class="n">h_algns</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">h_algns</span> <span class="ow">in</span> <span class="n">algns</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="c1"># Group truth alignments from the haplotypes by genomic window and trim</span>
+        <span class="c1"># to common genomic range</span>
+        <span class="n">grouped</span> <span class="o">=</span> <span class="n">TruthAlignment</span><span class="o">.</span><span class="n">_group_and_trim_by_haplotype</span><span class="p">(</span><span class="n">algns</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">grouped</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_group_and_trim_by_haplotype</span><span class="p">(</span><span class="n">alignments</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Group alignments by haplotype tag and trim to common genomic window.</span>
+<span class="sd">        :param alignments: {haplotype: [`TruthAlignment` objs]}</span>
+<span class="sd">        :returns: list of tuples where each tuple contains `TruthAlignment` objs</span>
+<span class="sd">            for each haplotype trimmed to common genomic window.</span>
+
+<span class="sd">        .. note:: We should avoid the situation of staggered alignments</span>
+<span class="sd">             which could occur by independently chunking each haplotype</span>
+<span class="sd">             by chunking the draft and aligning to both haplotypes, then</span>
+<span class="sd">             chunking both haplotypes according to draft-chunks, then realining</span>
+<span class="sd">             haplotype chunks to back to the draft - this should minimize</span>
+<span class="sd">             staggering of truth alignments and hence the number of labels</span>
+<span class="sd">             discarded.</span>
+<span class="sd">             -------------  ----------</span>
+<span class="sd">                     --------------</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">haplotypes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">alignments</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">haplotypes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># haploid</span>
+            <span class="n">grouped</span> <span class="o">=</span> <span class="p">[(</span><span class="n">a</span><span class="p">,)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alignments</span><span class="p">[</span><span class="n">haplotypes</span><span class="p">[</span><span class="mi">0</span><span class="p">]]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># create interval trees for other haplotypes</span>
+            <span class="n">trees</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">haplotypes</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">trees</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="o">=</span> <span class="n">intervaltree</span><span class="o">.</span><span class="n">IntervalTree</span><span class="p">([</span><span class="n">intervaltree</span><span class="o">.</span><span class="n">Interval</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alignments</span><span class="p">[</span><span class="n">h</span><span class="p">]])</span>
+            <span class="c1"># loop over alignments in first haplotype and find overlapping</span>
+            <span class="c1"># alignments in other haplotypes. If there are multiple overlapping</span>
+            <span class="c1"># alignments, take the one with the longest overlap.</span>
+            <span class="n">grouped</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">alignments</span><span class="p">[</span><span class="n">haplotypes</span><span class="p">[</span><span class="mi">0</span><span class="p">]]:</span>
+                <span class="n">group</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">]</span>
+                <span class="n">common_start</span><span class="p">,</span> <span class="n">common_end</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">end</span>
+                <span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">trees</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">h_algns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tree</span><span class="o">.</span><span class="n">overlap</span><span class="p">(</span><span class="n">common_start</span><span class="p">,</span> <span class="n">common_end</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">h_algns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># no alignments on this haplotype, skip this alignment</span>
+                        <span class="k">break</span>
+                    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">h_algns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># find most overlapping alignment</span>
+                        <span class="n">ovlps</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">common_end</span><span class="p">,</span> <span class="n">o</span><span class="o">.</span><span class="n">end</span><span class="p">)</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">common_start</span><span class="p">,</span> <span class="n">o</span><span class="o">.</span><span class="n">begin</span><span class="p">)]</span>
+                        <span class="n">h_algn</span> <span class="o">=</span> <span class="n">h_algns</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">ovlps</span><span class="p">)]</span><span class="o">.</span><span class="n">data</span>
+                    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">h_algns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># keep this alignment</span>
+                        <span class="n">h_algn</span> <span class="o">=</span> <span class="n">h_algns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+
+                    <span class="n">common_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">common_start</span><span class="p">,</span> <span class="n">h_algn</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+                    <span class="n">common_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">common_end</span><span class="p">,</span> <span class="n">h_algn</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+                    <span class="n">group</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h_algn</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">haplotypes</span><span class="p">):</span>  <span class="c1"># skip this group</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Skipping </span><span class="si">{}</span><span class="s1">:</span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1"> as some haplotypes have no alignments&#39;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">alignment</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">end</span><span class="p">))</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># trim all alignments to common start/end</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+                        <span class="n">i</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">common_start</span>
+                        <span class="n">i</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="n">common_end</span>
+                    <span class="n">grouped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">group</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">grouped</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_load_alignments</span><span class="p">(</span><span class="n">truth_bam</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">haplotag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create list of TruthAlignment objects from a bam of Truth aligned to ref.</span>
+
+<span class="sd">        :param truth_bam: (sorted indexed) bam with true sequence aligned to reference</span>
+<span class="sd">        :param region: `medaka.common.Region` obj</span>
+<span class="sd">        :param haplotag: bam tag specifying which haplotype the alignment belongs to (for multi-ploidy labels)</span>
+
+<span class="sd">        :returns: {haplotype: [`TruthAlignment` objs]}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">alignments</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">pysam</span><span class="o">.</span><span class="n">AlignmentFile</span><span class="p">(</span><span class="n">truth_bam</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">bamfile</span><span class="p">:</span>
+            <span class="n">aln_reads</span> <span class="o">=</span> <span class="n">bamfile</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">reference</span><span class="o">=</span><span class="n">region</span><span class="o">.</span><span class="n">ref_name</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="n">region</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">region</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">aln_reads</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">is_unmapped</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">is_secondary</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">hap</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="n">haplotag</span><span class="p">)</span> <span class="k">if</span> <span class="n">haplotag</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+                    <span class="n">alignments</span><span class="p">[</span><span class="n">hap</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TruthAlignment</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s2">&quot;TruthAlign&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">hap</span> <span class="ow">in</span> <span class="n">alignments</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">alignments</span><span class="p">[</span><span class="n">hap</span><span class="p">]</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;start&#39;</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Retrieved </span><span class="si">{}</span><span class="s2"> alignments for haplotype </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">alignments</span><span class="p">[</span><span class="n">hap</span><span class="p">]),</span> <span class="n">hap</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">alignments</span>
+
+
+<div class="viewcode-block" id="TruthAlignment.get_positions_and_labels"><a class="viewcode-back" href="../../medaka.html#medaka.labels.TruthAlignment.get_positions_and_labels">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_positions_and_labels</span><span class="p">(</span><span class="n">h_algns</span><span class="p">,</span> <span class="n">aln_to_pairs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create labels and positions array.</span>
+
+<span class="sd">        :param h_algns: tuple of alignments for each haplotype spanning the same genomic range.</span>
+<span class="sd">        :param aln_to_pairs: callable, that gets aligned pairs from an `AlignedSegment` obj.</span>
+<span class="sd">        :returns: tuple(positions, encoded_label_array)</span>
+
+<span class="sd">            - positions: numpy structured array with &#39;ref_major&#39;</span>
+<span class="sd">              (reference position index) and &#39;ref_minor&#39;</span>
+<span class="sd">              (trailing insertion index) fields.</span>
+
+<span class="sd">            - encoded_label_array: numpy array, with shape (pos, ploidy) and</span>
+<span class="sd">                           dtype [(&#39;base, int), (&#39;run_length&#39;, int)]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">get_named_logger</span><span class="p">(</span><span class="s1">&#39;Labels&#39;</span><span class="p">)</span>
+        <span class="c1"># ensure all provided alignments have the same start end</span>
+        <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">end</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">h_algns</span><span class="p">))),</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">h_algns</span><span class="p">))))</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Alignments must be trimmed to common genomic region&#39;</span><span class="p">)</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="n">h_algns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">h_algns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">end</span>
+
+        <span class="n">pos2label_haps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">pad</span> <span class="o">=</span> <span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">aln</span> <span class="ow">in</span> <span class="n">h_algns</span><span class="p">:</span>
+            <span class="n">pairs</span> <span class="o">=</span> <span class="n">aln_to_pairs</span><span class="p">(</span><span class="n">aln</span><span class="o">.</span><span class="n">aln</span><span class="p">)</span>
+            <span class="c1"># pad labels with encoded gap</span>
+            <span class="n">padder</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">pad</span>
+            <span class="n">pos2label</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="n">padder</span><span class="p">)</span>
+            <span class="n">ins_count</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">dropwhile</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rpos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+                                            <span class="ow">or</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">rpos</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">),</span> <span class="n">pairs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">pair</span><span class="o">.</span><span class="n">rpos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">pair</span><span class="o">.</span><span class="n">rpos</span> <span class="o">&gt;=</span> <span class="n">end</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="n">pair</span><span class="o">.</span><span class="n">rpos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">ins_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ins_count</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">current_pos</span> <span class="o">=</span> <span class="n">pair</span><span class="o">.</span><span class="n">rpos</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">current_pos</span><span class="p">,</span> <span class="n">ins_count</span><span class="p">)</span>
+                <span class="n">label</span> <span class="o">=</span> <span class="n">pair</span><span class="o">.</span><span class="n">qbase</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">if</span> <span class="n">pair</span><span class="o">.</span><span class="n">qbase</span> <span class="k">else</span> <span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">_gap_</span>
+                <span class="k">if</span> <span class="n">label</span> <span class="o">==</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Found </span><span class="si">{}</span><span class="s1"> at pos </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+                <span class="n">label</span> <span class="o">=</span> <span class="p">(</span><span class="n">medaka</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="n">label</span><span class="p">],</span> <span class="n">pair</span><span class="o">.</span><span class="n">qlen</span><span class="p">)</span>
+                <span class="n">pos2label</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
+
+            <span class="n">pos2label_haps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos2label</span><span class="p">)</span>
+
+        <span class="c1"># get positions common to all haplotypes</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pos2label_haps</span><span class="p">])))</span>
+        <span class="c1"># create label array</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;base&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;run_length&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">)]</span>
+        <span class="n">ploidy</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos2label_haps</span><span class="p">)</span>
+        <span class="n">label_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">positions</span><span class="p">),</span> <span class="n">ploidy</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="c1"># fill with pad so that insertions present on only one haplotype have</span>
+        <span class="c1"># correct gap-label on other haplotype(s)</span>
+        <span class="n">label_array</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">pad</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">pos2label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pos2label_haps</span><span class="p">):</span>
+            <span class="n">label_array</span><span class="p">[:,</span> <span class="n">h</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">((</span><span class="n">pos2label</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">positions</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">positions</span><span class="p">))</span>
+
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">positions</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;minor&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">)])</span>
+
+        <span class="k">return</span> <span class="n">positions</span><span class="p">,</span> <span class="n">label_array</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-19, Oxford Nanopore Technologies
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Benchmarks &mdash; Medaka 0.8.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Experimental Variant calling" href="snp.html" />
+    <link rel="prev" title="Getting Started" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Medaka
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.8.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Benchmarks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#comparison-of-medaka-and-nanopolish">Comparison of <cite>medaka</cite> and <cite>nanopolish</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#evaluation-across-samples-and-depths">Evaluation across samples and depths</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="snp.html">Experimental Variant calling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough</a></li>
+<li class="toctree-l1"><a class="reference internal" href="draft_origin.html">Origin of the draft sequence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="future.html">History and Future Directions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Medaka</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Benchmarks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/benchmarks.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="benchmarks">
+<span id="id1"></span><h1>Benchmarks<a class="headerlink" href="#benchmarks" title="Permalink to this headline">¶</a></h1>
+<p>The following demonstrates the utility of Medaka’s neural network in forming an
+improved consensus from a pileup of reads.</p>
+<p>Results were obtained using the default models provided with <code class="docutils literal notranslate"><span class="pre">medaka</span></code>. These models
+were trained using data obtained from E.coli, S.cerevisiae and H.sapiens samples.</p>
+<p>Error statistics were calculated using the <a class="reference external" href="https://github.com/nanoporetech/pomoxis">pomoxis</a> program <code class="docutils literal notranslate"><span class="pre">assess_assembly</span></code> after
+aligning 100kb chunks of the consensus to the reference. Reported metrics are
+median values over all chunks.</p>
+<div class="section" id="comparison-of-medaka-and-nanopolish">
+<h2>Comparison of <cite>medaka</cite> and <cite>nanopolish</cite><a class="headerlink" href="#comparison-of-medaka-and-nanopolish" title="Permalink to this headline">¶</a></h2>
+<p>In this comparison the <code class="docutils literal notranslate"><span class="pre">medaka</span></code> E.coli <a class="reference internal" href="walkthrough.html"><span class="doc">Walkthrough</span></a> dataset was used.
+These data were not used to train the model. Basecalling was performed using
+<code class="docutils literal notranslate"><span class="pre">Guppy</span> <span class="pre">v2.2.1</span></code>; both the older transducer and the newer flip-flop algorithm
+were used for comparison. Basecalled reads were trimmed using <a class="reference external" href="https://github.com/rrwick/Porechop">porechop</a> to remove adapters, and assembly was
+performed using <a class="reference external" href="https://github.com/marbl/canu">canu v1.8</a>. The assembly was
+corrected using <a class="reference external" href="https://github.com/isovic/racon">racon v1.3.1</a> before being passed
+to <code class="docutils literal notranslate"><span class="pre">medaka</span></code> or <code class="docutils literal notranslate"><span class="pre">nanopolish</span></code>. <a class="reference external" href="https://github.com/jts/nanopolish">nanopolish v0.10.1</a> was run using <code class="code docutils literal notranslate"><span class="pre">--fix-homopolymers</span></code> option.</p>
+<p>The workflow used here includes four iterations of <code class="docutils literal notranslate"><span class="pre">racon</span></code>. This should not be viewed as optimal for all
+datasets, see <a class="reference internal" href="draft_origin.html#draftorigin"><span class="std std-ref">Origin of the draft sequence</span></a> for further details.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="15%" />
+<col width="11%" />
+<col width="15%" />
+<col width="15%" />
+<col width="11%" />
+<col width="15%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td rowspan="2">&#160;</td>
+<td colspan="3"><strong>flipflop</strong></td>
+<td colspan="3"><strong>transducer</strong></td>
+</tr>
+<tr class="row-even"><td><em>racon (x4)</em></td>
+<td><em>medaka</em></td>
+<td><em>nanopolish</em></td>
+<td><em>racon (x4)</em></td>
+<td><em>medaka</em></td>
+<td><em>nanopolish</em></td>
+</tr>
+<tr class="row-odd"><td>Q(accuracy)</td>
+<td>26.8</td>
+<td>34.2</td>
+<td>32.0</td>
+<td>25.2</td>
+<td>31.9</td>
+<td>31.0</td>
+</tr>
+<tr class="row-even"><td>Q(substitution)</td>
+<td>45.2</td>
+<td>50.0</td>
+<td>47.0</td>
+<td>41.0</td>
+<td>47.0</td>
+<td>41.4</td>
+</tr>
+<tr class="row-odd"><td>Q(deletion)</td>
+<td>27.1</td>
+<td>34.0</td>
+<td>32.6</td>
+<td>25.6</td>
+<td>35.0</td>
+<td>30.7</td>
+</tr>
+<tr class="row-even"><td>Q(insertion)</td>
+<td>40.1</td>
+<td>50.0</td>
+<td>43.0</td>
+<td>39.2</td>
+<td>35.2</td>
+<td>40.5</td>
+</tr>
+<tr class="row-odd"><td>CPU time / hrs</td>
+<td>00:50</td>
+<td>00:07</td>
+<td>49:10</td>
+<td>00:50</td>
+<td>00:07</td>
+<td>50:24</td>
+</tr>
+</tbody>
+</table>
+<p>For this dataset the older transducer basecaller with <code class="docutils literal notranslate"><span class="pre">medaka</span></code> delivers
+similar results to <code class="docutils literal notranslate"><span class="pre">nanopolish</span></code> in a fraction of the time. The flip-flop
+workflow is seen to be superior to nanopolish. The runtime of <code class="docutils literal notranslate"><span class="pre">medaka</span></code> can be
+reduced further by utilizing a GPU, the runtime with a NVIDIA GTX1080Ti is
+found to be less than one minute!</p>
+<p>A particular advantage of <code class="docutils literal notranslate"><span class="pre">medaka</span></code> over other methods is its improved
+accuracy in recovering homopolymer lengths.</p>
+<img alt="_images/hp_acc.png" class="align-center" src="_images/hp_acc.png" />
+<p>Above the main plot we show homopolymer frequencies from H.sapiens Chrom. 1,
+adapted from <a class="reference external" href="http://dirac.cnrs-orleans.fr/~piazza/PB/files/DNA.pdf">Statistical analysis of simple repeats in the human genome</a>.</p>
+</div>
+<div class="section" id="evaluation-across-samples-and-depths">
+<h2>Evaluation across samples and depths<a class="headerlink" href="#evaluation-across-samples-and-depths" title="Permalink to this headline">¶</a></h2>
+<p>The comparison below illustrates results at various coverage depths for a
+collection of further organisms. Assemblies were performed as above with
+canu and racon, using the <code class="docutils literal notranslate"><span class="pre">Guppy</span> <span class="pre">v3.0.3</span></code> high accuracy basecaller and
+<code class="docutils literal notranslate"><span class="pre">medaka</span> <span class="pre">v0.6.5</span></code>.</p>
+<img alt="_images/cov_acc.png" class="align-center" src="_images/cov_acc.png" />
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="snp.html" class="btn btn-neutral float-right" title="Experimental Variant calling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-19, Oxford Nanopore Technologies
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
