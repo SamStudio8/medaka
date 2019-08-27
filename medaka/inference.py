@@ -434,7 +434,12 @@ def predict(args):
         ds.update_meta(meta)
 
     logger.info("Setting tensorflow threads to {}.".format(args.threads))
-    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
+    try:
+        tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+    except AttributeError:
+        tf.logging.set_verbosity(tf.logging.ERROR)
+
     K.set_session(tf.Session(
         config=tf.ConfigProto(
             intra_op_parallelism_threads=args.threads,
